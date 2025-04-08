@@ -2,33 +2,32 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import IconFeather from '@expo/vector-icons/Feather';
-import Ionicons from '@expo/vector-icons/Ionicons';
-/* import { getUnreadNotifications, getUser, markReadNotifications } from '../src/apis/user.api'; */
-/* import { useAuth } from '../src/contexts/AuthContext';
-import { useProfile } from '../src/contexts/ProfileContext'; */
+import { getUnreadNotifications, getUser, markReadNotifications } from '../apis/user.api';
+import { useAuth } from '../contexts/AuthContext';
+import { useProfile } from '../contexts/ProfileContext';
 import { colors } from '../constants/Screen';
 
-const TopBar = () => {
-/*   const { user, jwt } = useAuth();
-  const { profile } = useProfile(); */
+const TopBar = ({ navigation }: any) => {
+  const { user, jwt } = useAuth();
+  const { profile } = useProfile();
   const [name, setName] = useState<string>('Teste');
   const [not, setNot] = useState<number>(0);
 
   const fetchUserInfo = async () => {
-  /*   try {
+    try {
       if (jwt) {
         const userInfo = await getUser(jwt);
-        setName(userInfo.name); */
+        setName(userInfo.name);
 
-/*         const notification = await getUnreadNotifications(jwt);
-        setNot(notification.length)
- */
-    /*   } else {
+        /* const notification = await getUnreadNotifications(jwt);
+        setNot(notification.length) */
+
+      } else {
         console.error("Token JWT é nulo.");
       }
     } catch (error) {
       console.error("Erro ao buscar informações do usuário:", error);
-    } */
+    }
   };
 
   useEffect(() => {
@@ -36,12 +35,12 @@ const TopBar = () => {
   }, []);
 
   const updateNot = async () => {
-    /* if (jwt) {
+    if (jwt) {
       const updateNote = await markReadNotifications(jwt);
       setNot(0)
     } else {
       console.error("Token JWT é nulo.");
-    } */
+    }
   }
 
 
@@ -50,7 +49,7 @@ const TopBar = () => {
     <View style={styles.container}>
 
       <View style={styles.leftContainer}>
-       {/*  <TouchableOpacity
+        <TouchableOpacity
           style={styles.menuButton}
           onPress={() => navigation.openDrawer()}
         >
@@ -59,7 +58,7 @@ const TopBar = () => {
             size={24}
             color={colors.primary}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
 
         <Text>
           <Text style={styles.title}>Olá, </Text>

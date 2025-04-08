@@ -12,7 +12,7 @@ import {
 import { colors } from '../constants/Screen';
 
 interface CustomButtonProps {
-  title: string;
+  title?: string;
   onPress: () => void;
   type?: string;
   textStyle?: StyleProp<TextStyle>;
@@ -53,10 +53,16 @@ const CustomButton = ({
       {loading ? (
         <ActivityIndicator size="small" color={spinnerColor || styles.primaryText.color} />
       ) : (
-        <View style={[styles.buttonContent, styleView]}>
-          <Text style={textStyles}>{title}</Text>
-          {icon}
-        </View>
+        title ? (
+          <View style={[styles.buttonContent, styleView]}>
+            <Text style={textStyles}>{title}</Text>
+            {icon}
+          </View>
+        ) : (
+          <View style={{display: 'flex', margin: 'auto', justifyContent: 'center', alignItems: 'center'}}>
+            {icon}
+          </View>
+        )
       )}
     </TouchableOpacity>
   );

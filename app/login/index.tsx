@@ -6,9 +6,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import LogoAndTagline from '../../components/LogoAndTagline';
 import CustomButton from '@/components/customButton';
 import { useRouter } from "expo-router";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Entypo from '@expo/vector-icons/Entypo';
+import { useNavigation } from "@react-navigation/native";
 
 const LoginScreen = () => {
-  const route = useRouter()
+  const navigation = useNavigation<any>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +34,7 @@ const LoginScreen = () => {
   };
 
   const handleRegisterPress = () => {
-    route.push("/resetPassword" as any)
+    navigation.navigate("Recuperar senha")
   };
 
   return (
@@ -70,7 +73,15 @@ const LoginScreen = () => {
                 justifyContent: "center",
               }}
             >
-              {/* ICONE */}
+              {
+                password ? !showPassword ? (
+
+                  <AntDesign name="eye" size={24} color="black" />
+                ) : (
+
+                  <Entypo name="eye-with-line" size={24} color="black" />
+                ) : null
+              }
             </TouchableOpacity>
           </View>
 

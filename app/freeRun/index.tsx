@@ -9,7 +9,7 @@ import FreeRunInfo from '../../components/FreeRunInfo';
 import RNFS from 'react-native-fs'; */
 import { RoutesType, useRun } from '../../contexts/RunContext';
 import { colors } from '../../constants/Screen';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 interface RouteParamsStart {
   avg_speed: string
@@ -18,26 +18,26 @@ interface RouteParamsStart {
   duration: string
   max_speed: string
   min_speed: string
-  allRoutes: string
+  allRoutes: RoutesType[]
 }
 
 const FreeRun = () => {
-  const route = useRouter();
+  const navigation = useNavigation<any>();
+  const route = useRoute();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const viewRef = useRef(null);
   const [image, setImage] = useState('');
   const { firstRouteCoordinates, lastRouteCoordinates } = useRun()
-  const { distance, calories, duration, max_speed, min_speed, avg_speed, allRoutes } = useLocalSearchParams() as unknown as RouteParamsStart;
-  console.log("useLocalSearchParams "+distance, calories, duration, max_speed, min_speed, avg_speed, allRoutes);
+  const { allRoutes, avg_speed, calories, distance, duration, max_speed ,min_speed }: RouteParamsStart = route.params;
   
   const exampleRoute = [
     { latitude: Number(firstRouteCoordinates?.latitude || 0), longitude: Number(firstRouteCoordinates?.longitude || 0) },
     { latitude: Number(lastRouteCoordinates?.latitude || 0), longitude: Number(lastRouteCoordinates?.longitude || 0) },
   ];
 
-  const parsedRoutes = JSON.parse(allRoutes);
 
-  const routeCoordinates = parsedRoutes?.map((coord: { latitude: any; longitude: any; }) => ({
+
+  const routeCoordinates = allRoutes?.map(coord => ({
     latitude: coord.latitude,
     longitude: coord.longitude,
   }));
@@ -75,8 +75,8 @@ const FreeRun = () => {
       <>
         <Marker
           coordinate={{
-            latitude: parsedRoutes[0].latitude,
-            longitude: parsedRoutes[0].longitude,
+            latitude: allRoutes[0].latitude,
+            longitude: allRoutes[0].longitude,
           }}
           title="Início"
           description="Início da rota"
@@ -85,8 +85,8 @@ const FreeRun = () => {
 
         <Marker
           coordinate={{
-            latitude: parsedRoutes[parsedRoutes.length - 1].latitude,
-            longitude: parsedRoutes[parsedRoutes.length - 1].longitude,
+            latitude: allRoutes[allRoutes.length - 1].latitude,
+            longitude: allRoutes[allRoutes.length - 1].longitude,
           }}
           title="Fim"
           description="Fim da rota"
@@ -109,7 +109,7 @@ const FreeRun = () => {
     <SafeAreaView style={styles.container}>
      {/*  <ViewShot ref={viewRef} options={{ format: 'jpg', quality: 1 }} style={{ flex: 1,backgroundColor: colors.background, }}> */}
         <TouchableOpacity
-          onPress={() => route.push('/dashboard')}
+          onPress={() => navigation.navigate('/dashboard')}
           style={styles.backButton}
         >
           {/* <Icon name="keyboard-arrow-left" size={24} color="#888888" /> */}
@@ -119,8 +119,8 @@ const FreeRun = () => {
           <MapView
             style={styles.map}
             initialRegion={{
-              latitude: parsedRoutes[0]?.latitude,
-              longitude: parsedRoutes[0]?.longitude,
+              latitude: allRoutes[0]?.latitude,
+              longitude: allRoutes[0]?.longitude,
               latitudeDelta: 0.005,
             longitudeDelta: 0.005
             }}

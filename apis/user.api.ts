@@ -23,15 +23,26 @@ import { IRun, RunFinishDTO, RunUpdateDTO } from '@/contexts/RunContext';
 export const register = async (user: UserRegister) => {
   try {
     console.log("REGISTER DATA: ", user);
-    
+
+    // Fazendo a requisição à API
     const response = await axiosInstance.post('/user/create', user);
+    console.log(response.data);
+
     return response.data;
-  } catch (error: any) {
-    console.log(error.response.data.error);
-    
-    throw new Error(error.response.data);
+  } catch (error:any) {
+    if (error.response && error.response.data) {
+      return error.response.data
+    } else {
+      // Caso seja um erro inesperado
+      console.error("Unexpected error: ", error);
+      throw {
+        success: false,
+        message: "Erro desconhecido. Tente novamente mais tarde."
+      };
+    }
   }
-}
+};
+
 
 export const getUser = async (token: string) => {
   try {
@@ -44,7 +55,7 @@ export const getUser = async (token: string) => {
 
 export const getUserByEmail = async (token: string, email:string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get(`user/byEmail/${email}`);
+    const response = await axiosInstanceAuthoraized(token).get(`/user/byEmail/${email}`);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -54,7 +65,7 @@ export const getUserByEmail = async (token: string, email:string) => {
 
 export const getUserTotalInfo = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/run/byUser/TotalData');
+    const response = await axiosInstanceAuthoraized(token).get('/client/run/byUser/TotalData');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -76,7 +87,7 @@ export const getUserInfo = async (token: string) => {
 
 export const getBalance = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('user/balance');
+    const response = await axiosInstanceAuthoraized(token).get('/user/balance');
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -86,7 +97,7 @@ export const getBalance = async (token: string) => {
 
 export const updatePassword = async (token: string, dto: UpdatePassword) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).put('auth/reset-password-confirmation', dto);
+    const response = await axiosInstanceAuthoraized(token).put('/auth/reset-password-confirmation', dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -113,7 +124,7 @@ export const verifyEmail = async (user: UserVerifyEmailWithCode) => {
 
 export const confirmRegistration = async (user: UserConfirmation) => {
   try {
-    const response = await axiosInstance.post('user/confirm-registration-code', user);
+    const response = await axiosInstance.post('/user/confirm-registration-code', user);
     return response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -122,7 +133,7 @@ export const confirmRegistration = async (user: UserConfirmation) => {
 
 export const updateProfilePicture = async (token: string, dto: UpdateProfilePicture) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).put('user/update-profile-picture', dto);
+    const response = await axiosInstanceAuthoraized(token).put('/user/update-profile-picture', dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -131,7 +142,7 @@ export const updateProfilePicture = async (token: string, dto: UpdateProfilePict
 
 export const transfer = async (token: string, dto: ConfirmTransferRegister) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('token/transfer-to', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/token/transfer-to', dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -140,7 +151,7 @@ export const transfer = async (token: string, dto: ConfirmTransferRegister) => {
 
 export const getProducts = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/product');
+    const response = await axiosInstanceAuthoraized(token).get('/client/product');
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -150,7 +161,7 @@ export const getProducts = async (token: string) => {
 
 export const postUserSkill = async (token: string, dto: UserSkillInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/user-skill/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/user-skill/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -160,7 +171,7 @@ export const postUserSkill = async (token: string, dto: UserSkillInterface) => {
 
 export const getUserSkill = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-skill/byUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-skill/byUser');
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -170,10 +181,12 @@ export const getUserSkill = async (token: string) => {
 
 export const postRun = async (token: string, dto: IRun): Promise<{ success: boolean; message: string; data: any }> =>  {
   try {
+    console.log("dto start RUN: ",dto);
+    
     const response = await axiosInstanceAuthoraized(token).post('/run/start', dto);
     return response.data
   } catch (error: any) {
-    console.log(error);
+    console.log(error, error.message);
     throw new Error(error.response.data.message);
   }
 }
@@ -210,7 +223,7 @@ export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) 
 
 export const getRun = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/run/byUser'); 
+    const response = await axiosInstanceAuthoraized(token).get('/client/run/byUser'); 
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -220,7 +233,7 @@ export const getRun = async (token: string) => {
 
 export const getUserFriends = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-friend/byUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-friend/byUser');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -229,7 +242,7 @@ export const getUserFriends = async (token: string) => {
 
 export const getUserFriendsPending = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-friend/byUserPending');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-friend/byUserPending');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -239,7 +252,7 @@ export const getUserFriendsPending = async (token: string) => {
 
 export const verifyFriends = async (token: string, _id: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get(`client/user-friend/verify-friends/${_id}`);
+    const response = await axiosInstanceAuthoraized(token).get(`/client/user-friend/verify-friends/${_id}`);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -248,7 +261,7 @@ export const verifyFriends = async (token: string, _id: string) => {
 
 export const updateUserFriendAccept = async (token: string, dto: UserFriendAcceptInterface, _id: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).put(`client/user-friend/update/${_id}`, dto);
+    const response = await axiosInstanceAuthoraized(token).put(`/client/user-friend/update/${_id}`, dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -257,7 +270,7 @@ export const updateUserFriendAccept = async (token: string, dto: UserFriendAccep
 
 export const postUserFriends = async (token: string, dto: UserFriendInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/user-friend/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/user-friend/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -267,7 +280,7 @@ export const postUserFriends = async (token: string, dto: UserFriendInterface) =
 
 export const deleteFriendRequest = async (token: string, _id: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).delete(`client/user-friend/delete/${_id}`);
+    const response = await axiosInstanceAuthoraized(token).delete(`/client/user-friend/delete/${_id}`);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -277,7 +290,7 @@ export const deleteFriendRequest = async (token: string, _id: string) => {
 
 export const postChatSendMessage = async (token: string, dto: UserChatInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/user-chat/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/user-chat/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -287,7 +300,7 @@ export const postChatSendMessage = async (token: string, dto: UserChatInterface)
 
 export const getUserChat = async (token: string, _id: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get(`client/user-chat/byUserFriend/${_id}`);
+    const response = await axiosInstanceAuthoraized(token).get(`/client/user-chat/byUserFriend/${_id}`);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -296,7 +309,7 @@ export const getUserChat = async (token: string, _id: string) => {
 
 export const postUserInventory = async (token: string, dto: UserInventoryInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/user-inventory/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/user-inventory/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -306,7 +319,7 @@ export const postUserInventory = async (token: string, dto: UserInventoryInterfa
 
 export const updateUserInventory = async (token: string, dto: UserInventoryUpdateInterface, _id: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).put(`client/user-inventory/update/${_id}`, dto);
+    const response = await axiosInstanceAuthoraized(token).put(`/client/user-inventory/update/${_id}`, dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -315,7 +328,7 @@ export const updateUserInventory = async (token: string, dto: UserInventoryUpdat
 
 export const getUserInventory = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get(`client/user-inventory/byUser`);
+    const response = await axiosInstanceAuthoraized(token).get(`/client/user-inventory/byUser`);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -324,7 +337,7 @@ export const getUserInventory = async (token: string) => {
 
 export const getMission = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/mission');
+    const response = await axiosInstanceAuthoraized(token).get('/client/mission');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -333,7 +346,7 @@ export const getMission = async (token: string) => {
 
 export const getTotalMission = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/mission/totalMission');
+    const response = await axiosInstanceAuthoraized(token).get('/client/mission/totalMission');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -342,7 +355,7 @@ export const getTotalMission = async (token: string) => {
 
 export const getUserPoints = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-points');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-points');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -351,7 +364,7 @@ export const getUserPoints = async (token: string) => {
 
 export const getTopUsers = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-points/getTopUsers');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-points/getTopUsers');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -360,7 +373,7 @@ export const getTopUsers = async (token: string) => {
 
 export const getUserPointsWeek = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-points/week');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-points/week');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -369,7 +382,7 @@ export const getUserPointsWeek = async (token: string) => {
 
 export const getUserPointsDay = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-points/day');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-points/day');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -378,7 +391,7 @@ export const getUserPointsDay = async (token: string) => {
 
 export const getUserTotalPoints= async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/user-points/totalPointsByUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/user-points/totalPointsByUser');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -387,7 +400,7 @@ export const getUserTotalPoints= async (token: string) => {
 
 export const getBox = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/box');
+    const response = await axiosInstanceAuthoraized(token).get('/client/box');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -396,7 +409,7 @@ export const getBox = async (token: string) => {
 
 export const getNotifications = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/notification/byUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/notification/byUser');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -405,7 +418,7 @@ export const getNotifications = async (token: string) => {
 
 export const getUnreadNotifications = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/notification/unread/byUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/notification/unread/byUser');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -414,7 +427,7 @@ export const getUnreadNotifications = async (token: string) => {
 
 export const markReadNotifications = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('client/notification/mark-read/byUser');
+    const response = await axiosInstanceAuthoraized(token).get('/client/notification/mark-read/byUser');
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
@@ -423,7 +436,7 @@ export const markReadNotifications = async (token: string) => {
 
 export const postNotification = async (token: string, dto: NotificationInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/notification/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/notification/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {
@@ -433,7 +446,7 @@ export const postNotification = async (token: string, dto: NotificationInterface
 
 export const postUserPoints = async (token: string, dto: UserPointsInterface) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('client/user-points/register', dto);
+    const response = await axiosInstanceAuthoraized(token).post('/client/user-points/register', dto);
 
     return response.data.data ?? response.data;
   } catch (error: any) {

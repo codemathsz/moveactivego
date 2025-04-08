@@ -153,32 +153,27 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }
 
   const startRun = async (jwt: string, run: IRun) => {
-    /* if(!jwt) return
+    if(!jwt) return
     let responseStartRun = await postRun(jwt, run);
     console.log("response", responseStartRun);
     console.log("response success", responseStartRun["success"]);
-    if(responseStartRun.success || responseStartRun["success"]){ */
+    if(responseStartRun.success || responseStartRun["success"]){
       setIsRunning(true);
-      /* setRun(responseStartRun?.data?.run);
-    } */
+      setRun(responseStartRun?.data?.run);
+    }
   };
 
   const stopRun = async (jwt: string, dto: RunFinishDTO): Promise<IResponseFinishRun | null> => {
-   /*  const response = await finishRun(jwt, run?.id!,dto,)
+    const response = await finishRun(jwt, run?.id!,dto,)
 
     if(response.success){
-      const updatedRun = {
-        ...response.data.run,
-        routes: routeCoordinates,
-      }; */
       clearRun()
       setIsRunning(false);
-      return null
-     /*  return updatedRun
+      return response.data.run
     }else{
       console.error("Erro ao finalizar corrida.");
       return null
-    } */
+    }
   };
 
   const startWatchingPosition = async (weight: number) => {
@@ -257,13 +252,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
               setCalories((prevCalories) => prevCalories + calories);
             }
-          }
-        }else{
-          if(isRunning === false){
-            setFirstRouteCoordinates({
-              latitude: coords.latitude,
-              longitude: coords.longitude
-            })
           }
         }
       }

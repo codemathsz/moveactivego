@@ -17,6 +17,8 @@ import { UserRegister } from "../../interfaces/user.interface";
 import LogoAndTagline from "../../components/LogoAndTagline";
 import CustomButton from "@/components/customButton";
 import CustomLabel from "@/components/customLabel";
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Entypo from '@expo/vector-icons/Entypo';
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
@@ -69,12 +71,24 @@ const RegisterScreen = () => {
       setLoading(true)
       
       try {
-        await register(user)
+        const response = await register(user)
+        if(response["success"]){
+          navigation.navigate("Verification", { email: email });
+        }else{
+          const firstErrorField = Object.keys(response.errors)[0]; // Acessa o primeiro campo com erro
+          const firstErrorMessage = response.errors[firstErrorField][0]
+          Toast.show(firstErrorMessage, {
+            duration: Toast.durations.SHORT,
+            position: Toast.positions.CENTER,
+            shadow: true,
+            animation: true,
+            hideOnPress: true,
+          });
+        }
         //navigation.navigate("Login");
-        navigation.navigate("Verification", { email: email });
         setLoading(false)
       } catch (error:any) {
-        Toast.show("Email ja cadastrado", {
+        Toast.show("Erro desconhecido. Tente novamente mais tarde.", {
           duration: Toast.durations.SHORT,
           position: Toast.positions.CENTER,
           shadow: true,
@@ -170,7 +184,15 @@ const RegisterScreen = () => {
                 justifyContent: "center",
               }}
             >
-              {/* ICONE */}
+              {
+                password ? !showPassword ? (
+
+                  <AntDesign name="eye" size={24} color="black" />
+                ) : (
+
+                  <Entypo name="eye-with-line" size={24} color="black" />
+                ) : null
+              }
             </TouchableOpacity>
           </View>
 
@@ -193,7 +215,15 @@ const RegisterScreen = () => {
                 justifyContent: "center",
               }}
             >
-              {/* ICONE */}
+              {
+                confirmPassword ? !showConfirmPassword ? (
+
+                  <AntDesign name="eye" size={24} color="black" />
+                ) : (
+
+                  <Entypo name="eye-with-line" size={24} color="black" />
+                ) : null
+              }
             </TouchableOpacity>
           </View>
         </View>

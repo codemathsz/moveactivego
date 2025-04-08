@@ -6,13 +6,13 @@ import { useRouter } from 'expo-router';
 
 const HomeScreen = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const router = useRouter();
+  const navigation = useNavigation<any>();
   const handleRegisterPress = () => {
-    router.push('/register');
+    navigation.navigate('Register');
   };
 
   const handleLoginPress = () => {
-    router.push('/login');
+    navigation.navigate('Login');
   };
 
   return (

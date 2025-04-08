@@ -9,7 +9,7 @@ export interface UserRegister {
 }
 
 export interface UserInterface {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   recoveryEmail: string;

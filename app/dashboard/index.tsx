@@ -2,12 +2,12 @@ import NavigationBar from "@/components/navigationBar";
 import StatsBar from "@/components/StatsBar";
 import TopBar from "@/components/TopBar";
 import { colors } from "@/constants/Screen";
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location"
 import MapArea from "@/components/mapArea";
+import { useNavigation } from "@react-navigation/native";
 
 interface ILocation{
   coords: {
@@ -24,8 +24,8 @@ interface ILocation{
 }
 
 const DashboardScreen = () =>{
+    const navigation = useNavigation<any>();
   const [location, setLocation] = useState<ILocation | null>(null);
-  const route = useRouter();
 
   useEffect(() =>{
     (async () =>{
@@ -41,7 +41,7 @@ const DashboardScreen = () =>{
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopBar />
+      <TopBar navigation={navigation}/>
 
       <View style={styles.statsBar}>
         <StatsBar />

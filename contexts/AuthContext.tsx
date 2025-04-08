@@ -25,7 +25,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProviderProps) => {
   const [user, setUser] = useState<UserInterface | null>(null);
-  const [jwt, setJwt] = useState<string | null>("asasasa");
+  const [jwt, setJwt] = useState<string | null>("");
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
 
   useEffect(() => {
@@ -39,7 +39,6 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
         setJwt(token);
         setLoggedIn(true);
       }else{
-        setJwt("aaaaaa");
         setLoggedIn(false);
       }
     })();
@@ -76,8 +75,10 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     if (response.success) {
       const userInfo = await getUser(response.data.token);
       saveToken(response.data.token)
+      console.log(userInfo);
+      
       setUser(userInfo);
-      setJwt(response.data.token);
+      setJwt(response.data.token);  
       setLoggedIn(true);
       setIsLoggedIn(true);
     } else {
@@ -86,16 +87,21 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   };
 
   const logout = async () => {
-    /* if(!jwt) return
+    console.log("aaa");
+
+    if(!jwt) return
+    console.log("a");
+    
     const responseLogout = await logoutApi(jwt);
     
-    if(responseLogout.success){ */
+    if(responseLogout.success){
+      console.log("logout");
       setUser(null);
       await AsyncStorage.removeItem('token');
       setJwt(null);
       setLoggedIn(false);
       setIsLoggedIn(false);
-    /* } */
+    }
   };
 
   const updateProfile = async (jwt:string) => {

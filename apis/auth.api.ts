@@ -7,7 +7,7 @@ interface ILogout{
 
 export const authenticate = async (email:string, password:string) => {
   try {
-    const response = await axiosInstance.post('auth/login', {
+    const response = await axiosInstance.post('/auth/login', {
       email,
       password,
     });

@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { IRun, RunFinishDTO, useRun } from '../contexts/RunContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDateToISO } from '@/utils';
-import { useRouter } from 'expo-router';
+import CustomButton from './customButton';
 interface ILocation{
   coords: {
     latitude: number;
@@ -35,10 +35,11 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     calories,
     routesToSend
   } = useRun()
-  const route = useRouter()
+  const navigation = useNavigation<any>();
   const { user, jwt } = useAuth();
   const [location, setLocation] = useState<ILocation | null>(null)
   const [city, setCity] = useState<string>('');
+  const [loading, setLoading] = useState(false)
 
   async function requestAuthorization () {
     let {status} = await Location.requestForegroundPermissionsAsync();
@@ -47,36 +48,39 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       return;
     }
     let userLocation = await Location.getCurrentPositionAsync({})
+
+    
     setLocation(userLocation as ILocation)
-    if(location){
-      fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${location.coords.latitude},${location.coords.longitude}&key=AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY`)
-      .then((response) =>  response.json())
-      .then((data) => {
-        if (data.status === 'OK') {
-          const city = data.results[0].address_components.find((component: { types: string | string[]; }) => {
-            return component.types.includes('administrative_area_level_2');
-          });
-          if (city) {
-            setCity(city.long_name);
-          } else {
-            setCity('Cidade não encontrada');
-          }
+    console.log(userLocation);
+      
+    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${userLocation.coords.latitude},${userLocation.coords.longitude}&key=AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY`)
+    .then((response) =>  response.json())
+    .then((data) => {
+      if (data.status === 'OK') {
+        const city = data.results[0].address_components.find((component: { types: string | string[]; }) => {
+          return component.types.includes('administrative_area_level_2');
+        });
+        if (city) {
+          setCity(city.long_name);
         } else {
-          setCity('Erro ao obter a cidade');
+          setCity('Cidade não encontrada');
         }
-      })
-      .catch((error) => {
-        console.error('Erro ao buscar detalhes da localização: ', error);
+      } else {
         setCity('Erro ao obter a cidade');
-      });
-    }
+      }
+    })
+    .catch((error) => {
+      console.error('Erro ao buscar detalhes da localização: ', error);
+      setCity('Erro ao obter a cidade');
+    });
   }
 
   const toggleRun = async () => {
     if(!jwt) return console.error('JWT is null');
+    setLoading(true)
     if(isRunning){
       if(props.dashboard){
-        return route.push('/run');
+        return navigation.navigate('Run' as never);
       }
       
       let routes = [...routesToSend];
@@ -87,35 +91,24 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
         calories: calories!,
         routes: routes
       }
-      /* const response = await stopRun(jwt,finishRunDTO ) */
-      const response = {
-        distance: 5.2, // em quilômetros
-        calories: 300, // em kcal
-        duration: 1800, // em segundos (30 minutos)
-        max_speed: 12.5, // em km/h
-        min_speed: 4.8, // em km/h
-        avg_speed: 8.4, // em km/h
-        routes: [
-          { latitude: -23.598276, longitude: -46.711479 },
-          { latitude: -23.597481, longitude: -46.712340 },
-          { latitude: -23.596320, longitude: -46.713210 },
-        ],
-      };
-      return route.push({pathname:'/freeRun', params: {
-        distance: response?.distance, 
-        calories: response?.calories,
-        duration: response?.duration,
-        max_speed: response?.max_speed,
-        min_speed: response?.min_speed,
-        avg_speed: response?.avg_speed,
-        allRoutes: JSON.stringify(response?.routes) 
-      }});
+      const response = await stopRun(jwt,finishRunDTO )
+      setLoading(false)
+      navigation.navigate('freeRun', { 
+        distance: response?.distance ?? 0, 
+        calories: response?.calories ?? 0,
+        duration: response?.duration ?? 0,
+        max_speed: response?.max_speed ?? 0,
+        min_speed: response?.min_speed ?? 0,
+        avg_speed: response?.avg_speed ?? 0,
+        allRoutes: response?.routes ?? []
+      });
     }else{
       // if peso ? segue : modal pra atualizar
+      requestAuthorization()
       let dto: IRun ={
         name: "Corrida Rápida",
         start_date: formatDateToISO(new Date()),
-        city: city,
+        city,
         routes: routeCoordinates,
         calories: 0,
       }
@@ -128,7 +121,8 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           location?.coords.longitude, 
         )
       }
-      return route.push('/run');
+      setLoading(false)
+      return navigation.navigate('Run');
     }
   };
 
@@ -144,6 +138,8 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     }
   },[location])
 
+  
+
   useFocusEffect(
     useCallback(() => {
       requestAuthorization()
@@ -152,8 +148,13 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
   );
 
   useEffect(() =>{
-    console.log("routeCoordinates ", routeCoordinates?.length);
+    console.log("aqq");
     
+    requestAuthorization()
+  },[])
+
+  useEffect(() =>{
+    console.log("routeCoordinates ", routeCoordinates?.length);
   },[routeCoordinates])
 
   return (
@@ -196,21 +197,21 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       ) : null}
 
       {!props.dashboard && (
-        <TouchableOpacity style={styles.buttonPause} onPress={toggleRun}>
-          <Ionicons name="pause" size={24} color="white" />
-        </TouchableOpacity>
+        <CustomButton 
+          onPress={() => toggleRun()} 
+          style={styles.buttonPause} 
+          loading={loading} 
+          icon={
+            <Ionicons name="pause" size={24} color="white" />
+          }
+        />
+
       )}
 
       {!props.card && (
         <View style={styles.customButton}>
-          <TouchableOpacity
-            onPress={toggleRun}
-            style={false ? styles.buttonStop : styles.button}
-          >
-            <View style={styles.buttonContent}>
-              <Text style={styles.text}>{false ? 'Corrida iniciada' : 'Iniciar Corrida'}</Text>
-            </View>
-          </TouchableOpacity>
+          
+          <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
         </View>
       )}
     </View>

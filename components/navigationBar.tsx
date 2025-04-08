@@ -4,12 +4,13 @@ import { useRouter, usePathname } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../constants/Screen';
+import { useNavigation } from '@react-navigation/native';
 
 const NavigationBar = () => {
-  const router = useRouter();
+  const navigation = useNavigation<any>();
   const pathname = usePathname(); // Obtém o caminho da rota atual
   const items = [
-    { path: '/dashboard', label: 'Home', icon: 'home-outline' },
+    { path: 'Dashboard', label: 'Home', icon: 'home-outline' },
     // { path: '/activities', label: 'Corridas', icon: 'albums-outline' },
     // { path: '/carteira', label: 'Carteira', icon: 'wallet-outline' },
     // { path: '/marketplace', label: 'Marketplace', icon: 'cart-outline' },
@@ -24,7 +25,7 @@ const NavigationBar = () => {
 
   const handleItemPress = (index: number, path: string) => {
     setSelectedIndex(index);
-    router.push(path as any); // Redireciona para a rota
+    navigation.navigate(path as any); // Redireciona para a rota
   };
 
   return (

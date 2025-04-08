@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = "http://177.11.121.8:8130/api";
+const baseURL = "https://move-api-rukyq.ondigitalocean.app/api";
 
 //create axios instance
 export const axiosInstance = axios.create({
