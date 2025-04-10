@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export interface AuthContextType {
   user: UserInterface | null;
-  login: (credentials: { email: string; password: string }) => Promise<void>;
+  login: (credentials: { email: string; password: string }) => Promise<string | null>;
   logout: () => void;
   updateProfile: (jwt: string) => Promise<void>;
   isLoggedIn: boolean;
@@ -81,8 +81,9 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
       setJwt(response.data.token);  
       setLoggedIn(true);
       setIsLoggedIn(true);
+      return null;
     } else {
-      throw new Error("Invalid credentials");
+      return response.message
     }
   };
 

@@ -6,14 +6,19 @@ interface ILogout{
 }
 
 export const authenticate = async (email:string, password:string) => {
-  try {
+  try {    
     const response = await axiosInstance.post('/auth/login', {
       email,
       password,
     });
     return response.data
-  } catch (error:any) {
-    throw new Error(error.response.data.message);
+  } catch (error:any) {    
+    if (error.response && error.response.data) {
+      return error.response.data
+    } else {
+      console.error("Unexpected error: ", error);
+      throw new Error(error.message);
+    }
   }
 };
 

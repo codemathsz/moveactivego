@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from 'react-native-root-toast';
 import CustomLabel from '../../components/customLabel';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,11 +18,9 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth();
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
     setLoading(true)
-    login({ email, password }).catch(err => {
-      setLoading(false)
-      
+    const response = await login({ email, password }).catch(() =>{
       Toast.show("Usuario ou senha inválido", {
         duration: Toast.durations.SHORT,
         position: Toast.positions.CENTER,
@@ -30,7 +28,19 @@ const LoginScreen = () => {
         animation: true,
         hideOnPress: true,
       });
-    });
+    })
+    setLoading(false)
+    console.log(response);
+    
+    if(response){
+      Toast.show(response, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+      });
+    }
   };
 
   const handleRegisterPress = () => {
@@ -38,61 +48,66 @@ const LoginScreen = () => {
   };
 
   return (
-      <View style={styles.container}>
-        <LogoAndTagline />
-        <View style={{ marginTop: 24 }}>
-          <CustomLabel text='E-mail' />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Email@email.com'
-              placeholderTextColor='#CCCCCC'
-              value={email}
-              onChangeText={setEmail}
-              keyboardType='email-address'
-              autoCapitalize='none'
-            />
-          </View>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.container}>
+          <LogoAndTagline />
+          <View style={{ marginTop: 24 }}>
+            <CustomLabel text='E-mail' />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder='Email@email.com'
+                placeholderTextColor='#CCCCCC'
+                value={email}
+                onChangeText={setEmail}
+                keyboardType='email-address'
+                autoCapitalize='none'
+              />
+            </View>
 
-          <CustomLabel text='Senha' />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Insira sua senha'
-              placeholderTextColor='#CCCCCC'
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize='none'
-            />
+            <CustomLabel text='Senha' />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder='Insira sua senha'
+                placeholderTextColor='#CCCCCC'
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize='none'
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(prev => !prev)}
+                style={{
+                  width: 40,
+                  alignItems: "flex-end",
+                  justifyContent: "center",
+                }}
+              >
+                {
+                  password ? !showPassword ? (
+
+                    <AntDesign name="eye" size={24} color="black" />
+                  ) : (
+
+                    <Entypo name="eye-with-line" size={24} color="black" />
+                  ) : null
+                }
+              </TouchableOpacity>
+            </View>
+
             <TouchableOpacity
-              onPress={() => setShowPassword(prev => !prev)}
-              style={{
-                width: 40,
-                alignItems: "flex-end",
-                justifyContent: "center",
-              }}
+              onPress={() => handleRegisterPress()}
             >
-              {
-                password ? !showPassword ? (
-
-                  <AntDesign name="eye" size={24} color="black" />
-                ) : (
-
-                  <Entypo name="eye-with-line" size={24} color="black" />
-                ) : null
-              }
+              <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            onPress={() => handleRegisterPress()}
-          >
-            <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
-          </TouchableOpacity>
+          <CustomButton title='Entrar' onPress={() => handleLoginPress()} style={{ marginBottom: 16, marginHorizontal: 16 }} loading={loading} />
         </View>
-        <CustomButton title='Entrar' onPress={() => handleLoginPress()} style={{ marginBottom: 16, marginHorizontal: 16 }} loading={loading} />
-      </View>
+      </ScrollView>
+
+    </KeyboardAvoidingView>
 
   );
 };
@@ -102,6 +117,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     justifyContent: "center",
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    padding: 16,
+    justifyContent: "space-between",
   },
   forgotPassword: {
     fontSize: 14,
