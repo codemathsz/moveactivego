@@ -16,6 +16,12 @@ import RunScreen from './run';
 import DashboardScreen from './dashboard';
 import Sidebar from '@/components/sidebar';
 import VerificationScreen from './verification';
+import ProfileScreen from './profile';
+import ActivitiesScreen from './activities';
+import { StatusBar } from 'react-native';
+import InventoryScreen from './inventory';
+import ItemScreen from './item';
+import * as Notifications from 'expo-notifications';
 
 const RootStack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -78,6 +84,40 @@ function LoggedInStackScreen() {
         component={DashboardScreen}
         options={{ ...screens.withoutHeader }}
       />
+      <LoggedInStack.Screen
+        name='Profile'
+        component={ProfileScreen}
+        options={
+          {
+            ...screens.withHeader,
+            title: "Meu Perfil",
+          } as any
+        }
+      />
+      <LoggedInStack.Screen
+        name='Activities'
+        component={ActivitiesScreen}
+        options={{
+          ...screens.withHeader,
+          title: "Atividades Recentes",
+        } as any}
+      />
+      <LoggedInStack.Screen
+        name='Inventory'
+        component={InventoryScreen}
+        options={{
+          ...screens.withHeader,
+          title: "Inventário",
+        } as any}
+      />
+      <LoggedInStack.Screen
+        name='ItemDetails'
+        component={ItemScreen}
+        options={{
+          ...screens.withHeader,
+          title: "",
+        } as any}
+      />
 
     </LoggedInStack.Navigator>
   );
@@ -99,6 +139,11 @@ function LoggedInDrawer() {
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      
+    })
+  },[]);
 
   return (
     <RootSiblingParent>
@@ -107,6 +152,7 @@ function App() {
         setIsLoggedIn={(value: any) => {
           setIsLoggedIn(value);
         }}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         {isLoggedIn ? (
           <RunProvider>
             <ProfileProvider>

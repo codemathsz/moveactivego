@@ -3,10 +3,9 @@ import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import NavigationBar from '../../components/navigationBar';
 import FreeRunInfo from '../../components/FreeRunInfo';
-/* import Icon from 'react-native-vector-icons/MaterialIcons'; */
-/* import ViewShot, { captureRef } from 'react-native-view-shot'; */
-/* import Share from 'react-native-share';
-import RNFS from 'react-native-fs'; */
+import ViewShot, { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { RoutesType, useRun } from '../../contexts/RunContext';
 import { colors } from '../../constants/Screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -26,9 +25,18 @@ const FreeRun = () => {
   const route = useRoute();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const viewRef = useRef(null);
+  const mapRef = useRef<MapView>(null);
   const [image, setImage] = useState('');
-  const { firstRouteCoordinates, lastRouteCoordinates } = useRun()
-  const { allRoutes, avg_speed, calories, distance, duration, max_speed ,min_speed }: RouteParamsStart = route.params;
+  const { max_speed }: RouteParamsStart = route.params as any|| {}
+  const { min_speed }: RouteParamsStart = route.params as any || {};
+  const { avg_speed }: RouteParamsStart = route.params as any || {};
+  const { duration }: RouteParamsStart = route.params as any || {};
+  const { distance }: RouteParamsStart = route.params as any || {};
+  const { calories }: RouteParamsStart = route.params as any || {};
+  const { firstRouteCoordinates } = route.params as any || {};
+  const { lastRouteCoordinates }= route.params as any || {};
+  const { allRoutes }: RouteParamsStart = route.params as any || [{}];
+  
   
   const exampleRoute = [
     { latitude: Number(firstRouteCoordinates?.latitude || 0), longitude: Number(firstRouteCoordinates?.longitude || 0) },
@@ -43,7 +51,7 @@ const FreeRun = () => {
   }));
 
   const onShare = async () => {
-   /*  try {
+    try {
       setImage('teste');
       const uri = await captureRef(viewRef, {
         format: 'png',
@@ -51,22 +59,24 @@ const FreeRun = () => {
       });
 
       if (uri) {
-        const base64Image = await RNFS.readFile(uri, 'base64');
-        const dataUri = `data:image/png;base64,${base64Image}`;
+          const base64Image = await FileSystem.readAsStringAsync(uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const dataUri = `data:image/png;base64,${base64Image}`;
 
-        await Share.open({
-            title: 'Compartilhar Captura de Tela',
-            message: 'Compartilhar Captura de Tela',
-            url: dataUri,
-        });
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri);
+          } else {
+            alert("Compartilhamento não suportado neste dispositivo.");
+          }
       } else {
-        console.error('CaptureRef returned an empty uri');
+        console.error('CaptureRef retornou um URI vazio');
       }
 
       setImage('');
     } catch (error) {
-      console.error('Error sharing screenshot: ', error);
-    } */
+      console.error('Erro ao compartilhar a captura de tela: ', error);
+    }
   };
 
 
@@ -103,11 +113,18 @@ const FreeRun = () => {
       return `${minutes}:${seconds}`;
     }
     return duration;
-}
+  }
+
+  useEffect(() =>{
+    mapRef.current?.animateCamera({
+      zoom: 20
+    });
+
+  },[])
 
   return (
     <SafeAreaView style={styles.container}>
-     {/*  <ViewShot ref={viewRef} options={{ format: 'jpg', quality: 1 }} style={{ flex: 1,backgroundColor: colors.background, }}> */}
+      <ViewShot ref={viewRef} options={{ format: 'jpg', quality: 1 }} style={{ flex: 1,backgroundColor: colors.background, }}>
         <TouchableOpacity
           onPress={() => navigation.navigate('/dashboard')}
           style={styles.backButton}
@@ -125,6 +142,7 @@ const FreeRun = () => {
             longitudeDelta: 0.005
             }}
             mapPadding={{ top: 200, right: 0, bottom: 0, left: 0 }}
+            ref={mapRef}
           >
             <Polyline
               coordinates={routeCoordinates?.map((route: { latitude: any; longitude: any; }) => ({
@@ -165,7 +183,7 @@ const FreeRun = () => {
         <View style={styles.navigationBar}>
           <NavigationBar />
         </View>
-      {/* </ViewShot> */}
+      </ViewShot>
     </SafeAreaView>
 
   );

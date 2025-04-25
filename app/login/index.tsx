@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from 'react-native-root-toast';
 import CustomLabel from '../../components/customLabel';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,28 +18,55 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth();
 
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardOpen(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardOpen(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
+
   const handleLoginPress = async () => {
     setLoading(true)
     const response = await login({ email, password }).catch(() =>{
-      Toast.show("Usuario ou senha inválido", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
+      if(Platform.OS){
+        Alert.alert("Usuario ou senha inválido")
+      }else{
+        Toast.show("Usuario ou senha inválido", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
     })
     setLoading(false)
-    console.log(response);
     
     if(response){
-      Toast.show(response, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
+      if(Platform.OS){
+        Alert.alert(response)
+      }else{
+        Toast.show(response, {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
     }
   };
 
@@ -48,8 +75,12 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
           <LogoAndTagline />
           <View style={{ marginTop: 24 }}>
@@ -103,7 +134,7 @@ const LoginScreen = () => {
               <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
             </TouchableOpacity>
           </View>
-          <CustomButton title='Entrar' onPress={() => handleLoginPress()} style={{ marginBottom: 16, marginHorizontal: 16 }} loading={loading} />
+          <CustomButton title='Entrar' onPress={() => handleLoginPress()} style={{ marginBottom: keyboardOpen ? 36 : 16, marginHorizontal: 16 }} loading={loading} />
         </View>
       </ScrollView>
 
@@ -119,7 +150,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   scrollViewContent: {
-    flexGrow: 1,
+    flex: 1,
     padding: 16,
     justifyContent: "space-between",
   },
@@ -148,6 +179,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontSize: 16,
     borderRadius: 8,
+    paddingVertical:4,
+    paddingHorizontal: 2,
     color: 'black'
   },
 });

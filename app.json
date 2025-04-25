@@ -12,7 +12,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.app.MoveActiveGo",
       "infoPlist": {
+        "UIBackgroundModes": ["location", "fetch"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa acessar sua localização mesmo em segundo plano para registrar rotas durante corridas.",
         "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa acessar sua localização para mostrar mapas e rotas.",
+        "NSPhotoLibraryUsageDescription": "Este aplicativo precisa acessar sua biblioteca de fotos para salvar capturas de tela feitas no aplicativo.",
+        "NSUserTrackingUsageDescription": "Este aplicativo usa notificações para lembrar você de completar desafios e corridas.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -23,8 +27,15 @@
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "POST_NOTIFICATIONS"
       ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY"
+        }
+      },
       "package": "com.MoveActiveGo"
     },
     "web": {

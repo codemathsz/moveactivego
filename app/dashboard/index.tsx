@@ -3,12 +3,11 @@ import StatsBar from "@/components/StatsBar";
 import TopBar from "@/components/TopBar";
 import { colors } from "@/constants/Screen";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { AppRegistry, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location"
 import MapArea from "@/components/mapArea";
 import { useNavigation } from "@react-navigation/native";
-
+import * as Notifications from 'expo-notifications';
 interface ILocation{
   coords: {
     latitude: number;
@@ -24,18 +23,14 @@ interface ILocation{
 }
 
 const DashboardScreen = () =>{
-    const navigation = useNavigation<any>();
-  const [location, setLocation] = useState<ILocation | null>(null);
+  const navigation = useNavigation<any>();
 
   useEffect(() =>{
     (async () =>{
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if(status !== "granted"){
-        console.log("Permissão negada.");
-        return;
+      const { status: notifStatus } = await Notifications.requestPermissionsAsync();
+      if (notifStatus !== 'granted') {
+        console.warn("Permissão de notificações negada.");
       }
-      let userLocation = await Location.getCurrentPositionAsync({})
-      setLocation(userLocation as ILocation)
     })()
   },[])
 

@@ -1,4 +1,7 @@
 import { 
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView, 
   StyleSheet, 
   Text ,
@@ -8,7 +11,7 @@ import {
 import { colors } from "../../constants/Screen";
 import LogoAndTagline from "../../components/LogoAndTagline";
 import CustomInput from "../../components/CustomInput"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { resetPassword, resetPasswordConfirmation } from "../../apis/user.api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ResetPasswordConfirmation } from "../../interfaces/reset-password-confirmation.interface";
@@ -31,6 +34,22 @@ const ResetPassword = () =>{
   const [newPasswordConfirm, setNewPasswordConfirm] = useState<string>('')
   const [error, setError] = useState<string>('')
   const {jwt} = useAuth()
+
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardOpen(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardOpen(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -74,84 +93,94 @@ const ResetPassword = () =>{
     }
   }
   return(
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.root}>
-        {sendEmail ? (
-          <Text>
-            <Text style={styles.title}>
-              <Text>Enviamos um código de verificação para o e-mail </Text>
-              <Text style={{ color: colors.primary }}>{email}</Text>
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+        <View style={styles.root}>
+          {sendEmail ? (
+            <Text>
+              <Text style={styles.title}>
+                <Text>Enviamos um código de verificação para o e-mail </Text>
+                <Text style={{ color: colors.primary }}>{email}</Text>
+              </Text>
+              <Text style={styles.title}>Insira o código e sua nova senha</Text>
             </Text>
-            <Text style={styles.title}>Insira o código e sua nova senha</Text>
-          </Text>
-        ) : (
-          <View style={{width:'100%'}}>
-            <LogoAndTagline />
-            <Text style={styles.title}>
-              Para redefinir sua <Text style={styles.strong}>senha</Text>, insira seu <Text style={styles.strong}>email</Text> abaixo. Enviaremos um código de verificação para você.
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.wFull}>
-          {!sendEmail ? (
-            <CustomInput
-              label="Email"
-              placeholder="email@example.com"
-              onChange={setEmail}
-            />
           ) : (
-            <View style={styles.fields}>
-              <View style={{width: '100%',display: 'flex',alignItems: 'center', justifyContent: 'center'}}>
-               <CodeField
-                ref={ref}
-                {...props}
-                value={value}
-                onChangeText={setValue}
-                cellCount={CELL_COUNT}
-                rootStyle={styles.codeFieldRoot}
-                keyboardType='number-pad'
-                textContentType='oneTimeCode'
-                renderCell={({ index, symbol, isFocused }) => (
-                  <Text
-                    key={index}
-                    style={[styles.cell, isFocused && styles.focusCell]}
-                    onLayout={getCellOnLayoutHandler(index)}
-                  >
-                    {symbol || (isFocused ? <Cursor /> : null)}
-                  </Text>
-                )}
-                />
-              </View>
-              <CustomInput
-                label="Nova senha"
-                placeholder="Digite"
-                secureTextEntry={true}
-                onChange={setNewPassword}
-              />
-              <CustomInput
-                label="Confirme a nova senha"
-                placeholder="Digite"
-                secureTextEntry={true}
-                onChange={setNewPasswordConfirm}
-              />    
+            <View style={{width:'100%'}}>
+              <LogoAndTagline />
+              <Text style={styles.title}>
+                Para redefinir sua <Text style={styles.strong}>senha</Text>, insira seu <Text style={styles.strong}>email</Text> abaixo. Enviaremos um código de verificação para você.
+              </Text>
             </View>
           )}
-          {error && <Text style={styles.errorText}>{error}</Text>}
-          <TouchableOpacity
-            style={[styles.button, { marginTop: 16 }]}
-            onPress={handleChangePassword}>
-            <View style={styles.buttonContent}>
-              <Text style={styles.primaryText}>{sendEmail ? 'Alterar' : 'Enviar código'}</Text>
-            </View>
-          </TouchableOpacity>
+
+          <View style={styles.wFull}>
+            {!sendEmail ? (
+              <CustomInput
+                label="Email"
+                placeholder="email@example.com"
+                onChange={setEmail}
+              />
+            ) : (
+              <View style={styles.fields}>
+                <View style={{width: '100%',display: 'flex',alignItems: 'center', justifyContent: 'center'}}>
+                <CodeField
+                  ref={ref}
+                  {...props}
+                  value={value}
+                  onChangeText={setValue}
+                  cellCount={CELL_COUNT}
+                  rootStyle={styles.codeFieldRoot}
+                  keyboardType='number-pad'
+                  textContentType='oneTimeCode'
+                  renderCell={({ index, symbol, isFocused }) => (
+                    <Text
+                      key={index}
+                      style={[styles.cell, isFocused && styles.focusCell]}
+                      onLayout={getCellOnLayoutHandler(index)}
+                    >
+                      {symbol || (isFocused ? <Cursor /> : null)}
+                    </Text>
+                  )}
+                  />
+                </View>
+                <CustomInput
+                  label="Nova senha"
+                  placeholder="Digite"
+                  secureTextEntry={true}
+                  onChange={setNewPassword}
+                />
+                <CustomInput
+                  label="Confirme a nova senha"
+                  placeholder="Digite"
+                  secureTextEntry={true}
+                  onChange={setNewPasswordConfirm}
+                />    
+              </View>
+            )}
+            {error && <Text style={styles.errorText}>{error}</Text>}
+            <TouchableOpacity
+              style={[styles.button, { marginTop: 16, marginBottom: keyboardOpen ? 20 : 0 }]}
+              onPress={handleChangePassword}>
+              <View style={styles.buttonContent}>
+                <Text style={styles.primaryText}>{sendEmail ? 'Alterar' : 'Enviar código'}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F9F9F9",
+  },
   scrollContainer: {
     flexGrow: 1,
   },

@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+#google play console
+moveactivego-accessdeployeas-3ca8b2761424.json
+
 # Expo
 .expo/
 dist/

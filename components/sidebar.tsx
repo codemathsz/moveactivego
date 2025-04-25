@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../contexts/ProfileContext";
 import { colors } from "../constants/Screen";
 import SideProfileImage from "./sideProfileImage";
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
 const Sidebar = ({ navigation }: any) => {
   const closeDrawer = () => navigation.closeDrawer();
@@ -26,8 +26,8 @@ const Sidebar = ({ navigation }: any) => {
       <Header />
       <Separator />
 
-      <MenuItem icon='home-outline' title='Home' screen='/dashboard' closeDrawer={closeDrawer} />
-      {/* <MenuItem icon='person-outline' title='Perfil' screen='/profile' closeDrawer={closeDrawer} /> */}
+      <MenuItem icon='home-outline' title='Home' screen='Dashboard' closeDrawer={closeDrawer} />
+      <MenuItem icon='person-outline' title='Perfil' screen='Profile' closeDrawer={closeDrawer} />
       {/* <MenuItem icon='wallet-outline' title='Carteira' screen='Carteira' closeDrawer={closeDrawer} />
       <MenuItem icon='cart-outline' title='Marketplace' screen='Marketplace' closeDrawer={closeDrawer} /> */}
       {/* <MenuItem icon='cart-outline' title='Carrinho' /> */}
@@ -87,12 +87,12 @@ interface MenuItemProps {
 }
 
 const MenuItem = ({ icon, title, screen, closeDrawer }: MenuItemProps & { closeDrawer: () => void }) => {
-  const route = useRouter()
+  const navigation = useNavigation<any>();
   return (
     <TouchableOpacity
       style={styles.menuItem}
       onPress={() => {
-        route.push(screen as any)
+        navigation.navigate(screen);
         closeDrawer();
       }}
     >

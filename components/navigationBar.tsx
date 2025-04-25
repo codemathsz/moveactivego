@@ -4,14 +4,15 @@ import { useRouter, usePathname } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../constants/Screen';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 const NavigationBar = () => {
   const navigation = useNavigation<any>();
-  const pathname = usePathname(); // Obtém o caminho da rota atual
+  const route = useRoute();
   const items = [
-    { path: 'Dashboard', label: 'Home', icon: 'home-outline' },
-    // { path: '/activities', label: 'Corridas', icon: 'albums-outline' },
+    { name: 'Dashboard', label: 'Home', icon: 'home-outline' },
+    { name: 'Activities', label: 'Corridas', icon: 'albums-outline' },
+    { name: 'Inventory', label: 'Inventário', icon: 'cube-outline' },
     // { path: '/carteira', label: 'Carteira', icon: 'wallet-outline' },
     // { path: '/marketplace', label: 'Marketplace', icon: 'cart-outline' },
   ];
@@ -19,13 +20,13 @@ const NavigationBar = () => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    const index = items.findIndex(item => item.path === pathname); // Compara o caminho atual
+    const index = items.findIndex(item => item.name === route.name);
     setSelectedIndex(index);
-  }, [pathname]);
+  }, [route.name]);
 
-  const handleItemPress = (index: number, path: string) => {
+  const handleItemPress = (index: number, screen: string) => {
     setSelectedIndex(index);
-    navigation.navigate(path as any); // Redireciona para a rota
+    navigation.navigate(screen);
   };
 
   return (
@@ -41,8 +42,8 @@ const NavigationBar = () => {
             key={index}
             icon={item.icon}
             label={item.label}
-            selected={item.path === pathname}
-            onPress={() => handleItemPress(index, item.path)}
+            selected={item.name === route.name}
+            onPress={() => handleItemPress(index, item.name)}
           />
         ))}
       </LinearGradient>

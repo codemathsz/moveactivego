@@ -1,6 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -32,33 +33,52 @@ const RegisterScreen = () => {
   const [loading, setLoading] = useState(false)
   const navigation = useNavigation<any>();
 
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const birthdateRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+
   const handleRegisterPress = async () => {
     if (!name || !email || !birthdate || !password || !confirmPassword || !phone) {
-      Toast.show("Preencha todos os campos", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
+      if(Platform.OS){
+        Alert.alert("Preencha todos os campos")
+      }else{
+        Toast.show("Preencha todos os campos", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
+      
       return;
     } else if (password !== confirmPassword) {
-      Toast.show("As senhas não coincidem", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
+      if(Platform.OS){
+        Alert.alert("As senhas não coincidem")
+      }else{
+        Toast.show("As senhas não coincidem", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
       return;
     }else if(password.length < 9){
-      Toast.show("A senha deve conter no minimo 9 caracteres.", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
+      if(Platform.OS){
+        Alert.alert("A senha deve conter no minimo 9 caracteres.")
+      }else{
+        Toast.show("A senha deve conter no minimo 9 caracteres.", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
     } else {
       const [day, month, year] = birthdate.split("/");
       const user: UserRegister = {
@@ -77,13 +97,17 @@ const RegisterScreen = () => {
         }else{
           const firstErrorField = Object.keys(response.errors)[0]; // Acessa o primeiro campo com erro
           const firstErrorMessage = response.errors[firstErrorField][0]
-          Toast.show(firstErrorMessage, {
-            duration: Toast.durations.SHORT,
-            position: Toast.positions.CENTER,
-            shadow: true,
-            animation: true,
-            hideOnPress: true,
-          });
+          if(Platform.OS){
+            Alert.alert(firstErrorMessage)
+          }else{
+            Toast.show(firstErrorMessage, {
+              duration: Toast.durations.SHORT,
+              position: Toast.positions.CENTER,
+              shadow: true,
+              animation: true,
+              hideOnPress: true,
+            });
+          }
         }
         //navigation.navigate("Login");
         setLoading(false)
@@ -114,21 +138,26 @@ const RegisterScreen = () => {
               placeholderTextColor='#CCCCCC'
               value={name}
               onChangeText={setName}
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current.focus()}
             />
             {/* ICONE */}
           </View>
 
           <CustomLabel text='E-mail' />
           <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Email@email.com'
-              placeholderTextColor='#CCCCCC'
-              value={email}
-              onChangeText={setEmail}
-              keyboardType='email-address'
-              autoCapitalize='none'
-            />
+              <TextInput
+                style={styles.input}
+                placeholder='Email@email.com'
+                placeholderTextColor='#CCCCCC'
+                value={email}
+                onChangeText={setEmail}
+                keyboardType='email-address'
+                autoCapitalize='none'
+                ref={emailRef}
+                returnKeyType="next"
+                onSubmitEditing={() => phoneRef.current.focus()}
+              />
             {/* ICONE */}
           </View>
 
@@ -148,6 +177,9 @@ const RegisterScreen = () => {
                 withDDD: true,
                 dddMask: '(99) '
               }}
+              refInput={(ref) => (phoneRef.current = ref)}
+              returnKeyType="next"
+              onSubmitEditing={() => birthdateRef.current.focus()}
             />
             {/* ICONE */}
           </View>
@@ -161,6 +193,9 @@ const RegisterScreen = () => {
               value={birthdate}
               onChangeText={setBirthdate}
               mask={Masks.DATE_DDMMYYYY}
+              ref={birthdateRef}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current.focus()}
             />
             {/* ICONE */}
           </View>
@@ -175,6 +210,9 @@ const RegisterScreen = () => {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize='none'
+              ref={passwordRef}
+              returnKeyType="next"
+              onSubmitEditing={() => confirmPasswordRef.current.focus()}
             />
             <TouchableOpacity
               onPress={() => setShowPassword(prev => !prev)}
@@ -206,6 +244,8 @@ const RegisterScreen = () => {
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
               autoCapitalize='none'
+              ref={confirmPasswordRef}
+              returnKeyType="done"
             />
             <TouchableOpacity
               onPress={() => setShowConfirmPassword(prev => !prev)}
@@ -274,6 +314,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     fontSize: 16,
     borderRadius: 8,
+    paddingVertical:4,
+    paddingHorizontal: 2,
     color: 'black'
   },
 });

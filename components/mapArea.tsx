@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Polyline, Region, Marker} from 'react-native-maps';
 import * as Location from "expo-location"
 import { colors } from "@/constants/Screen";
@@ -9,6 +9,7 @@ import { IRun, RunFinishDTO, useRun } from '../contexts/RunContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDateToISO } from '@/utils';
 import CustomButton from './customButton';
+
 interface ILocation{
   coords: {
     latitude: number;
@@ -23,142 +24,63 @@ interface ILocation{
 }
 const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, initialLocation?: any, skill?: any[] }) => {
   const { 
-    mapRef,
+    location,
     isRunning,
     startRun,
     stopRun,
-    startWatchingPosition, 
-    handleSetRouteCoordinates,
-    handleSetFirstRouteCoordinates,
-    firstRouteCoordinates, 
     routeCoordinates,
-    calories,
-    routesToSend
+    mapRef,
+    loading,
+    spawnedBoxItems,
+    showItems,
+    handleCloseShowItems,
+    spawnedBox
   } = useRun()
+  
   const navigation = useNavigation<any>();
-  const { user, jwt } = useAuth();
-  const [location, setLocation] = useState<ILocation | null>(null)
-  const [city, setCity] = useState<string>('');
-  const [loading, setLoading] = useState(false)
 
-  async function requestAuthorization () {
-    let {status} = await Location.requestForegroundPermissionsAsync();
-    if(status !== "granted"){
-      console.log("Permissão negada.");
-      return;
-    }
-    let userLocation = await Location.getCurrentPositionAsync({})
 
-    
-    setLocation(userLocation as ILocation)
-    console.log(userLocation);
-      
-    fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${userLocation.coords.latitude},${userLocation.coords.longitude}&key=AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY`)
-    .then((response) =>  response.json())
-    .then((data) => {
-      if (data.status === 'OK') {
-        const city = data.results[0].address_components.find((component: { types: string | string[]; }) => {
-          return component.types.includes('administrative_area_level_2');
-        });
-        if (city) {
-          setCity(city.long_name);
-        } else {
-          setCity('Cidade não encontrada');
-        }
-      } else {
-        setCity('Erro ao obter a cidade');
-      }
-    })
-    .catch((error) => {
-      console.error('Erro ao buscar detalhes da localização: ', error);
-      setCity('Erro ao obter a cidade');
-    });
-  }
 
   const toggleRun = async () => {
-    if(!jwt) return console.error('JWT is null');
-    setLoading(true)
     if(isRunning){
       if(props.dashboard){
         return navigation.navigate('Run' as never);
       }
       
-      let routes = [...routesToSend];
-
-      routes.push(routeCoordinates[routeCoordinates.length - 1]);
-      let finishRunDTO: RunFinishDTO = {
-        end_date: formatDateToISO(new Date()),
-        calories: calories!,
-        routes: routes
-      }
-      const response = await stopRun(jwt,finishRunDTO )
-      setLoading(false)
-      navigation.navigate('freeRun', { 
-        distance: response?.distance ?? 0, 
-        calories: response?.calories ?? 0,
-        duration: response?.duration ?? 0,
-        max_speed: response?.max_speed ?? 0,
-        min_speed: response?.min_speed ?? 0,
-        avg_speed: response?.avg_speed ?? 0,
-        allRoutes: response?.routes ?? []
-      });
+      await stopRun()
     }else{
-      // if peso ? segue : modal pra atualizar
-      requestAuthorization()
-      let dto: IRun ={
-        name: "Corrida Rápida",
-        start_date: formatDateToISO(new Date()),
-        city,
-        routes: routeCoordinates,
-        calories: 0,
-      }
-      await startRun(jwt,dto)
-      startWatchingPosition(user?.weight || 0)
-      
-      if(location){
-        handleSetFirstRouteCoordinates(
-          location?.coords?.latitude, 
-          location?.coords.longitude, 
-        )
-      }
-      setLoading(false)
-      return navigation.navigate('Run');
+      await startRun() 
     }
   };
 
-  useEffect(() =>{
-    if(location){
-      handleSetRouteCoordinates(
-        location?.coords?.latitude, 
-        location?.coords.longitude, 
-        location?.coords?.speed ?? 0, 
-        formatDateToISO(location?.timestamp),
-        0
-      )
-    }
-  },[location])
-
-  
-
-  useFocusEffect(
-    useCallback(() => {
-      requestAuthorization()
-      startWatchingPosition(80)
-    }, [])
-  );
-
-  useEffect(() =>{
-    console.log("aqq");
-    
-    requestAuthorization()
-  },[])
-
-  useEffect(() =>{
-    console.log("routeCoordinates ", routeCoordinates?.length);
-  },[routeCoordinates])
-
   return (
     <View style={styles.mapContainer}>
+      {showItems && (
+        <Modal transparent={true} visible={true} animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10}}>
+                <Text>Items resgatados!</Text>
+                <TouchableOpacity onPress={() => handleCloseShowItems()}>
+                  <Text style={styles.closeButtonText}>✖</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {
+                spawnedBoxItems?.map((item) =>{
+                  return (
+                    <View key={item.id}>
+                      <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemRarity}>{item.rarity}</Text>
+                    </View>
+                  )
+                })
+              }
+            </View>
+          </View>
+        </Modal>
+      )}
       {location ? (
         <MapView
           style={styles.map}
@@ -173,11 +95,11 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           showsMyLocationButton
         >
           {
-            isRunning && firstRouteCoordinates && (
+            isRunning && (
               <Marker 
                 coordinate={{
-                  latitude: firstRouteCoordinates.latitude,
-                  longitude: firstRouteCoordinates.longitude
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude
                 }}
               />
             )
@@ -190,6 +112,17 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
               }))}
               strokeColor="#FF0000" 
               strokeWidth={3}
+            />
+          )}
+          {isRunning && spawnedBox && (
+            <Marker
+              coordinate={{
+                latitude: spawnedBox?.latitude,
+                longitude: spawnedBox?.longitude
+              }}
+              title="Recompensa!"
+              description="Pegue essa caixa de recompensa 🏆"
+              image={require('../assets/icons/move.png')}
             />
           )}
         </MapView>
@@ -219,6 +152,42 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
 };
 
 const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.76)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: 300,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  closeButtonText: {
+    fontSize: 20,
+    color: '#333',
+  },
+  itemImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  itemName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  itemRarity: {
+    fontSize: 16,
+    color: 'gray',
+  },
   mapContainer: {
     height: '100%',
     width: '100%',
@@ -282,21 +251,22 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     backgroundColor: colors.primary,
+    display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    right: 0,
+    right: 30, // só usa um dos dois: left ou right
     bottom: 450,
-    left: 300,
     zIndex: 10,
   },
-  modalContainer: {
+  
+ /*  modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     paddingHorizontal: 8,
-  },
+  }, */
   modalContent: {
     backgroundColor: '#fff',
     padding: 20,
@@ -316,7 +286,7 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
     width: 300
   },
-  closeButton: {
+  /* closeButton: {
     backgroundColor: colors.primary,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -327,7 +297,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
     textAlign: 'center',
-  },
+  }, */
   cancelButton: {
     backgroundColor: 'transparent',
     borderColor: '#555555',

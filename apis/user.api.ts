@@ -19,11 +19,10 @@ import { UserInventoryUpdateInterface } from '../interfaces/user-inventory-updat
 /* import { IRun, RunFinishDTO, RunUpdateDTO } from '../contexts/RunContext'; */
 import { UserVerifyEmailWithCode } from '../interfaces/user-verify-email';
 import { IRun, RunFinishDTO, RunUpdateDTO } from '@/contexts/RunContext';
+import { Alert } from 'react-native';
 
 export const register = async (user: UserRegister) => {
   try {
-    console.log("REGISTER DATA: ", user);
-
     // Fazendo a requisição à API
     const response = await axiosInstance.post('/user/create', user);
     console.log(response.data);
@@ -181,26 +180,33 @@ export const getUserSkill = async (token: string) => {
 
 export const postRun = async (token: string, dto: IRun): Promise<{ success: boolean; message: string; data: any }> =>  {
   try {
-    console.log("dto start RUN: ",dto);
+    console.log(dto);
     
     const response = await axiosInstanceAuthoraized(token).post('/run/start', dto);
     return response.data
-  } catch (error: any) {
-    console.log(error, error.message);
-    throw new Error(error.response.data.message);
+  }catch (error:any) {
+    if (error.response && error.response.data) {
+      console.log(error.response.data);
+      
+      return error.response.data
+    } else {
+      console.error("Unexpected error: ", error);
+      throw {
+        success: false,
+        message: "Erro desconhecido. Tente novamente mais tarde."
+      };
+    }
   }
 }
 
 
 export const updateRun = async (token: string, runId: any,  dto: RunUpdateDTO) => {
   try {
-    console.log(dto);
     const response = await axiosInstanceAuthoraized(token).put(`/run/update/${runId}`, dto);
-    console.log("UPDATE RUN: response, ",response);
     
     return response.data;
   } catch (error: any) {
-    console.log(error);
+    console.log(error.response.data);
     
     throw new Error(error.response.data.message);
   }
@@ -208,24 +214,32 @@ export const updateRun = async (token: string, runId: any,  dto: RunUpdateDTO) =
 
 export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) => {
   try {
-    console.log(dto);
-    
     const response = await axiosInstanceAuthoraized(token).post(`/run/finish/${runId}`, dto);
-    console.log("FISNISH RUN: ",response.data);
-    
     return response.data;
   } catch (error: any) {
     console.log(error);
-    
+    Alert.alert(
+      "Erro",
+      JSON.stringify(error.response.data, null, 2) // Adiciona espaçamento para formatar o JSON
+    );
     throw new Error(error.response.data.message);
   }
 }
 
 export const getRun = async (token: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).get('/client/run/byUser'); 
+    const response = await axiosInstanceAuthoraized(token).get('/run/user'); 
 
     return response.data.data ?? response.data;
+  } catch (error: any) {
+    throw new Error(error.response.data.message);
+  }
+}
+
+export const getInventoryUserItems = async (token: string) => {
+  try {
+    const response = await axiosInstanceAuthoraized(token).get('/inventory'); 
+    return response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
   }
@@ -469,5 +483,25 @@ export const resetPasswordConfirmation = async (token: string, dto: ResetPasswor
     return response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);
+  }
+}
+
+export const handleRequestOpenBox = async(token: string, boxId: number) =>{
+  try {
+    const response = await axiosInstanceAuthoraized(token).post(`/boxes/open/${boxId}`);
+    console.log(response.data);
+
+    return response.data;
+  } catch (error:any) {
+    if (error.response && error.response.data) {
+      return error.response.data
+    } else {
+      // Caso seja um erro inesperado
+      console.error("Unexpected error: ", error);
+      throw {
+        success: false,
+        message: "Erro desconhecido. Tente novamente mais tarde."
+      };
+    }
   }
 }

@@ -38,6 +38,7 @@ const CustomButton = ({
   const buttonStyles = [
     styles.button,
     type === 'secondary' ? styles.secondaryButton : styles.primaryButton,
+    !title && styles.iconOnlyButton, 
     style,
   ];
 
@@ -59,9 +60,10 @@ const CustomButton = ({
             {icon}
           </View>
         ) : (
-          <View style={{display: 'flex', margin: 'auto', justifyContent: 'center', alignItems: 'center'}}>
+          <View>
             {icon}
           </View>
+
         )
       )}
     </TouchableOpacity>
@@ -69,6 +71,10 @@ const CustomButton = ({
 };
 
 const styles = StyleSheet.create({
+  iconOnlyButton: {
+    padding: 0, // remove padding pra não deslocar o ícone
+  },
+  
   button: {
     padding: 16,
     borderRadius: 8,
