@@ -53,6 +53,12 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     }
   };
 
+  useEffect(() => {
+    mapRef.current?.animateCamera({
+      center: location?.coords,
+      zoom: 70,
+    });
+  },[])
   return (
     <View style={styles.mapContainer}>
       {showItems && (
@@ -93,13 +99,14 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           }}
           showsUserLocation
           showsMyLocationButton
+          zoomEnabled={true}
         >
           {
             isRunning && (
               <Marker 
                 coordinate={{
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude
+                  latitude: routeCoordinates[0]?.latitude,
+                  longitude: routeCoordinates[0]?.longitude
                 }}
               />
             )

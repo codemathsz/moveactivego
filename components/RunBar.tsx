@@ -1,4 +1,4 @@
-/* import { SegmentedArc } from '@shipt/segmented-arc-for-react-native'; */
+import { SegmentedArc } from '@shipt/segmented-arc-for-react-native';
 import React, { useEffect, useState } from 'react';
 import { DimensionValue, Image, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../constants/Screen';
@@ -14,7 +14,7 @@ interface RunStatProps {
 }
 
 const RunBar = ({time}: any) => {
-  const { formattedTimer, distance, calories } = useRun()
+  const { formattedTimer, distance, calories, timer } = useRun()
   const segments = [
     {
       filledColor: '#3FDC81',
@@ -26,10 +26,16 @@ const RunBar = ({time}: any) => {
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [totalMission, setTotalMission] = useState<number>(0);
   const [width, setWidth] = useState<string>('0');
+  const [speed, setSpeed] = useState<number>(0);
 
- /*  useEffect(() => {
-    getUserPoints();
-  }, []); */
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSpeed(Number((distance / (timer / 3600)).toFixed(2)));
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [distance, timer]);
+  
 
   const getUserPoints = async () => {
     try {
@@ -76,20 +82,19 @@ const RunBar = ({time}: any) => {
   return (
     <SafeAreaView>
       <View style={styles.container}>
-        {/* <SegmentedArc
+        <SegmentedArc
           segments={segments}
-          fillValue={velocidade.velocidade}
+          fillValue={Number(speed || 0)}
           isAnimated={true}
           animationDelay={1000}
         >
           {(props) => (
             <View style={[styles.lightBackground]}>
-              <Text style={styles.averageSpeedText}>{velocidade.velocidade || 0}</Text>
+              <Text style={styles.averageSpeedText}>{speed || 0}</Text>
               <Text style={[styles.smallLabel, { marginBottom: 5 }]}>Km/h</Text>
             </View>
-
           )}
-        </SegmentedArc> */}
+        </SegmentedArc>
 
         <View style={styles.row}>
           <Text style={styles.label}>Missões diárias</Text>

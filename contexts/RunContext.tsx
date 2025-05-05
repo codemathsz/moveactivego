@@ -34,6 +34,7 @@ export interface RunContextType {
   showItems: boolean
   handleCloseShowItems: () => void
   spawnedBox: Box | null
+  timer: number
 }
 
 export type RoutesType ={
@@ -166,7 +167,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   let accumulatedDistance = 0;
   let runSpeed = 0;
   const minDistance = 0.001;
-
+  const isRunningRef = useRef(isRunning);
 
   const initializeLocation = async () => {
     const { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
@@ -183,14 +184,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     setLocation(userLocation as ILocation)
     mapRef.current?.animateCamera({
       zoom: 20,
-    });
-
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Localização Iniciada",
-        body: `Sua localização atual: (${userLocation.coords.latitude.toFixed(2)}, ${userLocation.coords.longitude.toFixed(2)})`,
-      },
-      trigger: null, // Envia imediatamente
     });
 
     setFirstRouteCoordinates({
@@ -233,9 +226,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
     setHasOpeningBox(true);
     setShowItems(false);
     setSpawnedBoxItems([]);
+    setCity('');
+    setLocation(null);
     accumulatedDistance = 0;
-    stopWatchingPosition(); // <-- importante!
+    stopWatchingPosition();
+    setIsRunning(false);
   };
+  
   
   const stopWatchingPosition = () => {
     if (locationSubscription) {
@@ -262,10 +259,14 @@ export const RunProvider = ({children}: RunProviderProps) => {
     }
     let responseStartRun = await postRun(jwt, dto);
     if(responseStartRun.success || responseStartRun["success"]){
+      
       setIsRunning(true);
       setRun(responseStartRun?.data?.run);
       setLoading(false)
+      setHasSpawnedReward(false)
       startLocationTracking()
+      startWatchingPosition()
+      console.log("Corrida iniciada com sucesso!");
       return navigation.navigate('Run');
     }
     setLoading(false)
@@ -283,11 +284,9 @@ export const RunProvider = ({children}: RunProviderProps) => {
       routes: routes
     }
     const response = await finishRun(jwt, run?.id!,finishRunDTO)
-   
-    console.log('stopRun',response);
     
-
     if(response.success){
+      await AsyncStorage.removeItem('@runData');
       clearRun()
       stopLocationTracking()
       startWatchingPosition()
@@ -325,14 +324,23 @@ export const RunProvider = ({children}: RunProviderProps) => {
     locationSubscription = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.BestForNavigation,
-        timeInterval: 1000, // Intervalo de tempo em milissegundos
-        distanceInterval: 1, // Distância mínima em metros
+        timeInterval: 1000,
+        distanceInterval: 1,
       },
       async (location) => {
         const { coords, timestamp } = location;
         setLocation(location as ILocation);
-        if (isRunning) {
-
+        
+        if (isRunningRef.current) {
+          console.log(coords);
+          mapRef.current!.animateCamera({
+            pitch: 70,
+            center: {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+            },
+            zoom: 70,
+          });
           let distance = lastRouteCoordinates
             ? calculateDistance(
                 lastRouteCoordinates?.latitude,
@@ -343,7 +351,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
             : 0;
 
           if(spawnedBox ){
-            console.log("spawnedBox");
             
             let distanceInMetersFromBox = calculateDistance(
               coords.latitude, 
@@ -351,11 +358,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
               spawnedBox?.latitude,
               spawnedBox?.longitude
             ) * 1000
-            console.log("distanceInMetersFromBox",distanceInMetersFromBox);
             
             if(distanceInMetersFromBox <= 30 && jwt && hasOpeningBox){
-              console.log("handle  openBox", spawnedBox);
-              
               await openBox(jwt, spawnedBox.box_id)
             }
           }
@@ -388,12 +392,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
             ]);
           }
 
-          mapRef.current?.animateCamera({
-            pitch: 70,
-            center: coords,
-            zoom: 70,
-            heading: 0
-          });
+          
 
           runSpeed = Number(coords.speed);
           if (
@@ -418,6 +417,18 @@ export const RunProvider = ({children}: RunProviderProps) => {
               setCalories((prevCalories) => prevCalories + calories);
             }
           }
+
+          await AsyncStorage.setItem('@runData', JSON.stringify({
+            route: routeCoordinates,
+            distance: distance,
+            calories: calories,
+            lastCoord: {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+            },
+            lastTimestamp: timestamp,
+            time: timer
+          }));
         }
       }
     );
@@ -442,7 +453,10 @@ export const RunProvider = ({children}: RunProviderProps) => {
     const userLat = routesToSend[routesToSend?.length -1].latitude
     const userLong = routesToSend[routesToSend?.length -1].longitude
     const responseGenerateRandomPoint = await generateRandomPoint(userLat, userLong, 150)
-    console.log("🎁 Recompensa spawnada!");
+   
+    console.log("Spawned box: ", responseGenerateRandomPoint.latitude, responseGenerateRandomPoint.longitude);
+    
+    
 
     let updateRouteDTO: RunUpdateDTO ={
       calories: calories,
@@ -450,11 +464,21 @@ export const RunProvider = ({children}: RunProviderProps) => {
       spawn_boxes: [responseGenerateRandomPoint]
     }
     const responseUpdateRun = await handleUpdateRun(jwt, run?.id, updateRouteDTO);
+    console.log(responseUpdateRun);
+    
     if(responseUpdateRun){
       setSpawnedBox({
         ...responseUpdateRun.spawned_boxes[0], 
         latitude: parseFloat(responseUpdateRun.spawned_boxes[0].latitude),
         longitude: parseFloat(responseUpdateRun.spawned_boxes[0].longitude)
+      });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Recompensa disponível!",
+          body: "Uma nova caixa apareceu no mapa. Vá buscá-la!",
+          sound: true,
+        },
+        trigger: null,
       });
     }
   };
@@ -508,6 +532,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   useEffect(() => {
     if (!isRunning || hasSpawnedReward) return;
     const elapsedMinutes = timer / 60;
+    console.log("Minutos passados: ", elapsedMinutes);
     
     //if (elapsedMinutes < 2) return;
     if (elapsedMinutes === 1) {
@@ -553,6 +578,11 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }, [timer]);
 
   useEffect(() => {
+    isRunningRef.current = isRunning;
+    (async () => {
+      await AsyncStorage.setItem('isRunningAsyncStorage', JSON.stringify({isRunning}));
+    })
+
     if (isRunning) {
       intervalRef.current = setInterval(() => {
         setTimer(prevTimer => prevTimer + 1);
@@ -581,13 +611,17 @@ export const RunProvider = ({children}: RunProviderProps) => {
       lightColor: '#FF231F7C',
     });
     const loadBackgroundData = async () => {
-    const rawData = await AsyncStorage.getItem('@runData');
-    if (rawData) {
-      const runData = JSON.parse(rawData);
-      setRouteCoordinates(runData.route);
-      setDistance(runData.distance);
-      setCalories(runData.calories);
-    }}
+      const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
+      const parsed = JSON.parse(isRunningData || '{}');
+      setIsRunning(parsed.isRunning || false);
+      const rawData = await AsyncStorage.getItem('@runData');
+      if (rawData) {
+        const runData = JSON.parse(rawData);
+        setRouteCoordinates(runData.route);
+        setDistance(runData.distance);
+        setCalories(runData.calories);
+      }
+    }
     loadBackgroundData();
   },[])
 
@@ -608,7 +642,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
         spawnedBoxItems,
         showItems,
         handleCloseShowItems,
-        spawnedBox
+        spawnedBox,
+        timer
       }}>
       {children}
     </RunContext.Provider>

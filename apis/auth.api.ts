@@ -14,6 +14,8 @@ export const authenticate = async (email:string, password:string) => {
     return response.data
   } catch (error:any) {    
     if (error.response && error.response.data) {
+      console.error(error.response.data);
+      
       return error.response.data
     } else {
       console.error("Unexpected error: ", error);

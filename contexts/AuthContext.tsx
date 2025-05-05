@@ -93,16 +93,16 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     if(!jwt) return
     console.log("a");
     
-   /*  const responseLogout = await logoutApi(jwt);
+    const responseLogout = await logoutApi(jwt);
     
-    if(responseLogout.success){ */
+    if(responseLogout.success){
       console.log("logout");
       setUser(null);
       await AsyncStorage.removeItem('token');
       setJwt(null);
       setLoggedIn(false);
       setIsLoggedIn(false);
-   /*  } */
+    }
   };
 
   const updateProfile = async (jwt:string) => {
