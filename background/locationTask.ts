@@ -1,38 +1,43 @@
 
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
-import { formatDateToISO } from '@/utils';
+import { formatDateToISO, formatTime } from '@/utils';
 import { calculateDistance } from '@/utils/geoUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 
+
+let lastNotificationUpdate = 0;
+const NOTIFICATION_UPDATE_INTERVAL = 10; // em segundos
 let notificationId: string | null = null;
 
-const showRunningNotification = async (distance: number, time: number, calories: number) => {
-  if (notificationId) {
-    // Atualiza a notificação existente
-    await Notifications.dismissNotificationAsync(notificationId);
-    notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Corrida em andamento',
-        body: `Distância: ${distance.toFixed(2)} km | Tempo: ${time} min | Calorias: ${calories.toFixed(1)} kcal`,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-        
-      },
-      trigger: null,
-    });
-  } else {
-    // Cria uma nova notificação
-    notificationId = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Corrida em andamento',
-        body: `Distância: ${distance.toFixed(2)} km | Tempo: ${time} min | Calorias: ${calories.toFixed(1)} kcal`,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
-        
-      },
-      trigger: null, // Notificação persistente enquanto o app estiver em execução
-    });
+
+const shouldUpdateNotification = () => {
+  const now = Math.floor(Date.now() / 1000);
+  if (now - lastNotificationUpdate >= NOTIFICATION_UPDATE_INTERVAL) {
+    lastNotificationUpdate = now;
+    return true;
   }
+  return false;
+};
+
+const showRunningNotification = async (distance: number, time: number, calories: number) => {
+  // Cancela a notificação anterior, se houver
+  if (notificationId) {
+    await Notifications.dismissNotificationAsync(notificationId);
+  }
+
+  const id = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: '🏃 Corrida em andamento',
+      body: `📏 Distância: ${distance.toFixed(2)} km\n⏳ Tempo: ${formatTime(time)} min\n🔥 Calorias: ${calories.toFixed(1)} kcal`,
+      sound: true,
+      sticky: false, // Apenas no Android, para notificações persistentes
+    },
+    trigger: null,
+  });
+
+  notificationId = id;
 };
 
 const BACKGROUND_LOCATION_TASK = 'background-location-task';
@@ -54,12 +59,16 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
         calories: 0,
         lastCoord: null,
         lastTimestamp: null,
-        time: 0,
+        runTime: 0,
       };
   
       const lastCoord = runData.lastCoord;
       const lastTimestamp = runData.lastTimestamp;
-      const runTime = Math.floor((Date.now() - runData.time) / 60000);
+      const startTimestampRaw = await AsyncStorage.getItem('@runStartTime');
+      const startTimestamp = startTimestampRaw ? parseInt(startTimestampRaw) : Date.now();
+      const runTime = Math.floor((Date.now() - startTimestamp) / 1000);
+
+
       let distance = 0;
       if (lastCoord) {
         distance = calculateDistance(
@@ -70,7 +79,7 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
         );
       }
   
-      const runSpeed = coords.speed ?? 0;
+      const runSpeed = Number(coords.speed);
   
       let calories = runData.calories;
       if (distance > minDistance && runSpeed > 0 && runSpeed <= 13) {
@@ -93,12 +102,12 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }) => {
           latitude: coords.latitude,
           longitude: coords.longitude,
         },
-        time: Date.now(),
+        runTime: runTime,
       };
-      await showRunningNotification(distance, runTime, calories);
+      if (shouldUpdateNotification()) {
+        await showRunningNotification(updatedData.distance, runTime, calories);
+      }
       await AsyncStorage.setItem('@runData', JSON.stringify(updatedData));
-  
-      console.log('[📍 BG]', coords, `Distância: ${distance.toFixed(2)} | Calorias: ${calories.toFixed(2)}`);
     }
   });
   

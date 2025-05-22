@@ -139,11 +139,13 @@ function LoggedInDrawer() {
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      
-    })
-  },[]);
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
 
   return (
     <RootSiblingParent>

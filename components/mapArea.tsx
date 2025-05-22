@@ -1,6 +1,6 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, AppState, AppStateStatus, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Polyline, Region, Marker} from 'react-native-maps';
 import * as Location from "expo-location"
 import { colors } from "@/constants/Screen";
@@ -34,7 +34,8 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     spawnedBoxItems,
     showItems,
     handleCloseShowItems,
-    spawnedBox
+    spawnedBox,
+    firstRouteCoordinates
   } = useRun()
   
   const navigation = useNavigation<any>();
@@ -53,12 +54,18 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     }
   };
 
-  useEffect(() => {
-    mapRef.current?.animateCamera({
-      center: location?.coords,
-      zoom: 70,
-    });
-  },[])
+  useEffect(() =>{
+    if(location){
+      mapRef.current?.animateCamera({
+        center: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        zoom: 70,
+      });
+    }
+  },[location])
+
   return (
     <View style={styles.mapContainer}>
       {showItems && (
@@ -100,13 +107,14 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           showsUserLocation
           showsMyLocationButton
           zoomEnabled={true}
+          zoomTapEnabled={true}
         >
           {
-            isRunning && (
+            isRunning && firstRouteCoordinates && (
               <Marker 
                 coordinate={{
-                  latitude: routeCoordinates[0]?.latitude,
-                  longitude: routeCoordinates[0]?.longitude
+                  latitude: firstRouteCoordinates.latitude,
+                  longitude: firstRouteCoordinates.longitude
                 }}
               />
             )
