@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -20,6 +20,8 @@ import CustomButton from "@/components/customButton";
 import CustomLabel from "@/components/customLabel";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
+import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js';
+import CountryPicker from 'react-native-country-picker-modal';
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
@@ -32,7 +34,7 @@ const RegisterScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false)
   const navigation = useNavigation<any>();
-
+  const [countryCode, setCountryCode] = useState('BR');
   const emailRef = useRef(null);
   const phoneRef = useRef(null);
   const birthdateRef = useRef(null);
@@ -124,6 +126,11 @@ const RegisterScreen = () => {
     }
   };
 
+  const handleChange = (text: string) => {
+    const parsed = parsePhoneNumberFromString(text, countryCode as CountryCode);
+    setPhone(parsed ? parsed.formatInternational() : text);
+  };
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -163,23 +170,19 @@ const RegisterScreen = () => {
 
           <CustomLabel text='Celular' />
           <View style={styles.inputContainer}>
-            <TextInputMask
+            <CountryPicker
+              countryCode={countryCode as any}
+              withFilter
+              withFlag
+              withCallingCode
+              onSelect={(country) => setCountryCode(country.cca2)}
+            />
+            <TextInput
               style={styles.input}
-              placeholder='99-99999999'
-              placeholderTextColor='#CCCCCC'
-              type={'cel-phone'}
+              placeholder="Número de telefone"
+              keyboardType="phone-pad"
               value={phone}
-              onChangeText={setPhone}
-              keyboardType='phone-pad'
-              autoCapitalize='none'
-              options={{
-                maskType: 'BRL',
-                withDDD: true,
-                dddMask: '(99) '
-              }}
-              refInput={(ref) => (phoneRef.current = ref)}
-              returnKeyType="next"
-              onSubmitEditing={() => birthdateRef.current.focus()}
+              onChangeText={handleChange}
             />
             {/* ICONE */}
           </View>
