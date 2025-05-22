@@ -12,7 +12,7 @@ import { colors } from "../../constants/Screen";
 import LogoAndTagline from "../../components/LogoAndTagline";
 import CustomInput from "../../components/CustomInput"
 import { useEffect, useState } from "react";
-import { resetPassword, resetPasswordConfirmation } from "../../apis/user.api";
+import { requestCode, resetPasswordConfirmation } from "../../apis/user.api";
 import { useAuth } from "../../contexts/AuthContext";
 import { ResetPasswordConfirmation } from "../../interfaces/reset-password-confirmation.interface";
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
@@ -56,21 +56,20 @@ const ResetPassword = () =>{
   };
 
   const handleChangePassword = async () =>{
-/*     if (!jwt) { console.error('Token JWT é nulo.'); return; } */
     setError('')
     if(!sendEmail){
       if(!isValidEmail(email)) return setError('Insira um email válido')
-      /* const response = await resetPassword(jwt!, email, "password_reset") */
+      const response = await requestCode(email, "password_reset")
       setSendEmail(true)
     }else{
       if (newPassword !== newPasswordConfirm) {
-          Toast.show("As senhas não coincidem", {
-            duration: Toast.durations.SHORT,
-            position: Toast.positions.CENTER,
-            shadow: true,
-            animation: true,
-            hideOnPress: true,
-          });
+        Toast.show("As senhas não coincidem", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
         return;
       }else if(newPassword.length < 9){
         Toast.show("A senha deve conter no minimo 9 caracteres.", {

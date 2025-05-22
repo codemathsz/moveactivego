@@ -6,7 +6,7 @@ import Toast from "react-native-root-toast";
 import LogoAndTagline from "../../components/LogoAndTagline";
 import CustomButton from "../../components/customButton";
 import { colors } from "../../constants/Screen";
-import { confirmRegistration, verifyEmail } from "../../apis/user.api";
+import { confirmRegistration, requestCode, verifyEmail } from "../../apis/user.api";
 import { UserConfirmation } from "../../interfaces/user-confirmation.interface";
 import { UserVerifyEmailWithCode } from "../../interfaces/user-verify-email";
 
@@ -60,6 +60,32 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
 
   };
 
+  const handleReesendCode = async () =>{
+    if(!email) return
+    const response = await requestCode(email, "email_confirmation")
+    console.log(response);
+    
+    if(response.success){
+      Toast.show("Email reenviado com sucesso", {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+      });
+      return;
+    }else{
+      Toast.show("Falha ao enviar email. "+ response.message, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+      });
+      return;
+    }
+  }
+
   const navigation = useNavigation<any>();
 
   return (
@@ -79,8 +105,8 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
           <Text>Enviamos um código de verificação para o e-mail </Text>
           <Text style={{ color: colors.primary }}>{email}</Text>
         </Text>
-
         <Text style={styles.description}>Insira o código para validar seu cadastro</Text>
+
 
         <CodeField
           ref={ref}
@@ -102,6 +128,13 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
             </Text>
           )}
         />
+
+        <TouchableOpacity onPress={() => handleReesendCode()}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.resendCodeText}>reenviar código</Text>
+            <View style={{ height: 2, backgroundColor: colors.primary, width: '100%', marginTop: 1 }}></View>
+          </View>
+        </TouchableOpacity>
       </View>
 
       <CustomButton
@@ -170,6 +203,10 @@ const styles = StyleSheet.create({
   focusCell: {
     borderColor: colors.primary,
   },
+
+  resendCodeText:{
+    color: colors.primary,
+  }
 });
 
 export default VerificationScreen;

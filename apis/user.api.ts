@@ -468,12 +468,19 @@ export const postUserPoints = async (token: string, dto: UserPointsInterface) =>
   }
 }
 
-export const resetPassword = async (token:string, email: string, type: string) => {
+export const requestCode = async (email: string, type: string) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).post('/auth/request-code', {email, type});
+    console.log(email, type);
+    
+    const response = await axiosInstance.post('/auth/request-code', {
+      email: email, 
+      type: type
+    });
+    console.log(response.data);
+    
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response.data.message);
+    return error.response.data
   }
 }
 

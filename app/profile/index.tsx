@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../constants/Screen';
@@ -26,21 +26,22 @@ const ProfileScreen = () => {
   const { userInfo } = useProfile();
   const navigation = useNavigation<any>();
   const [name, setName] = useState(user?.name ?? profile.name);
-  const [usertota, setUserTotal] = useState();
-  const [usertotalHoras, setUserTotalHoras] = useState();
-  const [usertotalCalorias, setUserTotalCalorias] = useState();
-  const [usertotalDistancia, setUserTotalDistancia] = useState();
-  const [usertotalCorrida, setUserTotalCorrida] = useState();
+  const [userTotalDuration, setUserTotalDuration] = useState();
+  const [userTotalCalories, setUserTotalCalories] = useState();
+  const [userTotalDistance, setUserTotalDistance] = useState<number>();
+  const [userTotalRuns, setUserTotalRuns] = useState();
+
   const fetchUserInfo = async () => {
     try {
       if (jwt) {
         const userInfo = await getUser(jwt);
-        /* const userTotal = await getUserTotalInfo(jwt);
-        setUserTotalHoras(userTotal.totalHoras);
-        setUserTotalCalorias(userTotal.totalCalorias.toFixed(2));
-        setUserTotalDistancia(userTotal.totalDistancia);
-        setUserTotalCorrida(userTotal.totalRegistros); */
+        console.log('userInfo: ',userInfo);
+        
         setName(userInfo.name);
+        setUserTotalCalories(userInfo?.total_calories);
+        setUserTotalDistance(userInfo?.total_distance);
+        setUserTotalDuration(userInfo?.total_duration);
+        setUserTotalRuns(userInfo?.total_runs);
       } else {
         console.error("Token JWT é nulo.");
       }
@@ -63,77 +64,76 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView style={{ flex: 1 }}>
-        <View style={styles.root}>
-          <ProfileImage size={96} style={{}} />
-          <Text style={styles.nameText}>{name}</Text>
-          <Text style={styles.levelText}>Level {userInfo?.level ?? profile.level}</Text>
-          {/* 
-          <View style={styles.badgeContainer}>
-            <Badge />
-            <Badge />
-            <Badge />
-            <Badge />
-          </View> */}
+          <View style={styles.root}>
+            <ProfileImage size={96} style={{}} />
+            <Text style={styles.nameText}>{name}</Text>
+            <Text style={styles.levelText}>Level {userInfo?.level ?? profile.level}</Text>
+            {/* 
+            <View style={styles.badgeContainer}>
+              <Badge />
+              <Badge />
+              <Badge />
+              <Badge />
+            </View> */}
 
-          <View style={styles.personalStatContainer}>
-            <PersonalStat
-              icon={require('../../assets/icons/total-time-icon.png')}
-              value={convertTime(usertotalHoras ?? 0)}
-              color="#FC457B"
-              description={'Horas'}
-            />
-            <PersonalStat
-              icon={require('../../assets/icons/total-distance-icon.png')}
-              value={String(usertotalDistancia ?? 0)}
-              color="#FFB905"
-              description={'Quilômetros'}
-            />
-            <PersonalStat
-              icon={require('../../assets/icons/total-calories-icon.png')}
-              value={String(usertotalCalorias ?? 0)}
-              color="#248E00"
-              description={'Calorias'}
-            />
-            <PersonalStat
-              icon={require('../../assets/icons/total-runs-icon.png')}
-              value={String(usertotalCorrida ?? 0)}
-              color="#006FDD"
-              description={'Corridas'}
-            />
-          </View>
+            <View style={styles.personalStatContainer}>
+              <PersonalStat
+                icon={require('../../assets/icons/total-time-icon.png')}
+                value={convertTime(userTotalDuration ?? 0)}
+                color="#FC457B"
+                description={'Horas'}
+              />
+              <PersonalStat
+                icon={require('../../assets/icons/total-distance-icon.png')}
+                value={String(userTotalDistance?.toFixed(2) ?? 0)}
+                color="#FFB905"
+                description={'Quilômetros'}
+              />
+              <PersonalStat
+                icon={require('../../assets/icons/total-calories-icon.png')}
+                value={String(userTotalCalories ?? 0)}
+                color="#248E00"
+                description={'Calorias'}
+              />
+              <PersonalStat
+                icon={require('../../assets/icons/total-runs-icon.png')}
+                value={String(userTotalRuns ?? 0)}
+                color="#006FDD"
+                description={'Corridas'}
+              />
+            </View>
 
-          <View style={styles.profileButtonsContainer}>
-            {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Friends')}>
-              <Image source={require('../../assets/images/soquinho.png')} resizeMode="contain" />
-              <Text style={styles.buttonText}>Amigos</Text>
-            </TouchableOpacity> */}
-            <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Activities')}>
-              <Image source={require('../../assets/images/atividade.png')} resizeMode="contain" />
-              <Text style={styles.buttonText}>Atividade</Text>
-            </TouchableOpacity>
-            {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Scoreboard')}>
-              <Image source={require('../../assets/images/placar.png')} resizeMode="contain" />
-              <Text style={styles.buttonText}>Placar</Text>
-            </TouchableOpacity> */}
-            {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Achievments')}>
-              <Image source={require('../../assets/images/conquista.png')} resizeMode="contain" />
-              <Text style={styles.buttonText}>Conquistas</Text>
-            </TouchableOpacity> */}
+            <View style={styles.profileButtonsContainer}>
+              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Friends')}>
+                <Image source={require('../../assets/images/soquinho.png')} resizeMode="contain" />
+                <Text style={styles.buttonText}>Amigos</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Activities')}>
+                <Image source={require('../../assets/images/atividade.png')} resizeMode="contain" />
+                <Text style={styles.buttonText}>Atividade</Text>
+              </TouchableOpacity>
+              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Scoreboard')}>
+                <Image source={require('../../assets/images/placar.png')} resizeMode="contain" />
+                <Text style={styles.buttonText}>Placar</Text>
+              </TouchableOpacity> */}
+              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Achievments')}>
+                <Image source={require('../../assets/images/conquista.png')} resizeMode="contain" />
+                <Text style={styles.buttonText}>Conquistas</Text>
+              </TouchableOpacity> */}
+            </View>
+            <View style={styles.profileButtonsContainer}>
+              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Goals')}>
+                <Image source={require('../../assets/images/objetivo.png')} resizeMode="contain" />
+                <Text style={styles.buttonText}>Objetivos</Text>
+              </TouchableOpacity>
+              <View style={{ width: '27.5%' }}></View> */}
+            </View>
           </View>
-          <View style={styles.profileButtonsContainer}>
-            {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Goals')}>
-              <Image source={require('../../assets/images/objetivo.png')} resizeMode="contain" />
-              <Text style={styles.buttonText}>Objetivos</Text>
-            </TouchableOpacity>
-            <View style={{ width: '27.5%' }}></View> */}
-          </View>
-        </View>
       </ScrollView>
       <View style={styles.navigationBar}>
         <NavigationBar />
       </View>
     </SafeAreaView>
-
   );
 };
 

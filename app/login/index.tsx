@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
+import { requestCode } from "@/apis/user.api";
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
@@ -40,34 +41,43 @@ const LoginScreen = () => {
 
   const handleLoginPress = async () => {
     setLoading(true)
-    const response = await login({ email, password }).catch(() =>{
-      if(Platform.OS){
-        Alert.alert("Usuario ou senha inválido")
-      }else{
-        Toast.show("Usuario ou senha inválido", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
-      }
-    })
-    setLoading(false)
-    
+    const response = await login({ email, password })
     if(response){
-      if(Platform.OS){
-        Alert.alert(response)
+      console.log(response);
+      if(response === "Email não verificado. Por favor, verifique seu email antes de fazer login."){
+        const responseRequestCode = await requestCode(email, "email_confirmation")
+        /* if(responseRequestCode.success){ */
+          navigation.navigate("Verification", { email: email });
+       /*  }else{
+          if(Platform.OS){
+            Alert.alert("Conta informada não está ativa. erro ao enviar código")
+          }else{
+            Toast.show("Conta informada não está ativa. erro ao enviar código", {
+              duration: Toast.durations.SHORT,
+              position: Toast.positions.CENTER,
+              shadow: true,
+              animation: true,
+              hideOnPress: true,
+            });
+          }
+        } */
+        setLoading(false)
       }else{
-        Toast.show(response, {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
+        if(Platform.OS){
+          Alert.alert("Usuario ou senha inválido")
+        }else{
+          Toast.show("Usuario ou senha inválido", {
+            duration: Toast.durations.SHORT,
+            position: Toast.positions.CENTER,
+            shadow: true,
+            animation: true,
+            hideOnPress: true,
+          });
+        }
+        setLoading(false)
       }
     }
+    setLoading(false)
   };
 
   const handleRegisterPress = () => {
