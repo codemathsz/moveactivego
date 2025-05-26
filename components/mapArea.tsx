@@ -104,11 +104,25 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
             latitudeDelta: 0.005,
             longitudeDelta: 0.005
           }}
-          showsUserLocation
           showsMyLocationButton
-          zoomEnabled={true}
-          zoomTapEnabled={true}
         >
+          {
+            location && (
+              <Marker 
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude
+                }}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <Image
+                  source={require('../assets/icons/run-icon.png')}
+                  style={{ width: 36, height: 36 }}
+                  resizeMode="contain"
+                />
+              </Marker>
+            )
+          }
           {
             isRunning && firstRouteCoordinates && (
               <Marker 

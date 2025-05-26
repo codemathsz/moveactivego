@@ -286,6 +286,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
       if (responseStartRun.success || responseStartRun["success"]) {
         setIsRunning(true);
+        isRunningRef.current = true;
         setRun(responseStartRun?.data?.run);
         setFirstRouteCoordinates({
           latitude: initialRoute.latitude,
@@ -293,7 +294,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
         });
         await AsyncStorage.setItem('@runStartTime', Date.now().toString());
         setHasSpawnedReward(false);
-        startLocationTracking();
+        /* startLocationTracking(); */ // pausar notificação
         startWatchingPosition();
         console.log("Corrida iniciada com sucesso!");
         navigation.navigate('Run');
@@ -325,7 +326,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if(response.success){
       await AsyncStorage.removeItem('@runData');
       clearRun()
-      stopLocationTracking()
+      /* stopLocationTracking() */
       startWatchingPosition()
       setIsRunning(false);
       setLoading(false)
@@ -365,13 +366,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const startWatchingPosition = async () => {
     locationSubscription = await Location.watchPositionAsync(
       {
-        accuracy: Location.Accuracy.High,
+        accuracy: Location.Accuracy.Highest,
         timeInterval: 1000,
         distanceInterval: 5,
       },
       async (location) => {
         const { coords, timestamp } = location;
-        
+
         setLocation(location as ILocation);
         if (isRunningRef.current && !stopingRun) {
           mapRef.current!.animateCamera({
@@ -391,14 +392,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
               )
             : 0;
 
-          if (distance < 5) {
-            lastRouteCoordinates = {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              timestamp,
-            };
-            return;
-          }
 
           if(spawnedBox ){
             
@@ -414,8 +407,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
             }
           }
 
-          const speed = coords.speed ?? 0;
-          if (speed < 0.3) return;
+          const speed = coords?.speed! > 0 ? Number(coords.speed) : 0
           accumulatedDistance += distance;
 
           setRouteCoordinates((prevRoutes) => [
@@ -646,19 +638,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
   useEffect(() => {
 
-    (async () => {
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      await Notifications.dismissAllNotificationsAsync();
-    })();
+    
     initializeLocation()
-    Notifications.setNotificationChannelAsync('running-updates', {
-      name: 'Atualizações da Corrida',
-      importance: Notifications.AndroidImportance.DEFAULT,
-      sound: 'default',
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
 

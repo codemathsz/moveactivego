@@ -30,11 +30,19 @@ const RunBar = ({time}: any) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setSpeed(Number((distance / (timer / 3600)).toFixed(2)));
+      if (timer < 10 || distance === 0) {
+        setSpeed(0);
+        return;
+      }
+
+      const hours = timer / 3600;
+      const currentSpeed = distance / hours;
+      setSpeed(Number(currentSpeed.toFixed(2)));
     }, 1000);
-  
+
     return () => clearInterval(interval);
   }, [distance, timer]);
+
   
 
   const getUserPoints = async () => {
