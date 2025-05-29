@@ -1,4 +1,4 @@
-
+/* 
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 import { formatDateToISO, formatTime } from '@/utils';
@@ -147,4 +147,4 @@ export const stopLocationTracking = async () => {
     } catch (error) {
       console.error('❌ Erro ao parar rastreamento ou limpar dados:', error);
     }
-  };
+  }; */
