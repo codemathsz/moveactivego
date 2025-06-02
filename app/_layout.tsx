@@ -1,7 +1,6 @@
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProfileProvider } from '../contexts/ProfileContext';

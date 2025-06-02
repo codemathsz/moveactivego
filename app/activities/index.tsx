@@ -32,7 +32,6 @@ const ActivitiesScreen = () => {
 			if (jwt) {
                 setLoading(true)
 				const data = await getRun(jwt);
-                console.log("RUN LIST:",data.runs[0])
 
 				setActivities(data.runs)
 				setLoading(false)

@@ -46,9 +46,9 @@ const LoginScreen = () => {
       console.log(response);
       if(response === "Email não verificado. Por favor, verifique seu email antes de fazer login."){
         const responseRequestCode = await requestCode(email, "email_confirmation")
-        /* if(responseRequestCode.success){ */
+        if(responseRequestCode.success){
           navigation.navigate("Verification", { email: email });
-       /*  }else{
+        }else{
           if(Platform.OS){
             Alert.alert("Conta informada não está ativa. erro ao enviar código")
           }else{
@@ -60,7 +60,7 @@ const LoginScreen = () => {
               hideOnPress: true,
             });
           }
-        } */
+        }
         setLoading(false)
       }else{
         if(Platform.OS){

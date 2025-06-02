@@ -1,8 +1,9 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect, useRef } from "react";
 import { UserInterface } from "../interfaces/user.interface";
 import { authenticate, logoutApi } from "../apis/auth.api";
 import { getUser } from "../apis/user.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppState, AppStateStatus } from "react-native";
 
 export interface AuthContextType {
   user: UserInterface | null;
@@ -27,22 +28,62 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   const [user, setUser] = useState<UserInterface | null>(null);
   const [jwt, setJwt] = useState<string | null>("");
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
+  const appState = useRef(AppState.currentState);
 
   useEffect(() => {
     setIsLoggedIn(loggedIn);
-  }, [loggedIn]);
+  }, [loggedIn]); 
 
-  useEffect(() =>{
-    (async () => {
-      const token = await getToken()
+  useEffect(() => {
+    const restoreAuthState = async () => {
+      const token = await getToken();
       if (token) {
         setJwt(token);
         setLoggedIn(true);
-      }else{
+        setIsLoggedIn(true);
+        const userInfo = await getUser(token);
+        setUser(userInfo);
+      } else {
+        setJwt(null);
         setLoggedIn(false);
+        setIsLoggedIn(false);
+        setUser(null);
       }
-    })();
-  },[])
+    };
+
+    restoreAuthState();
+  }, []);
+
+
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // Quando o app volta do background
+        const restoreAuthState = async () => {
+          const token = await getToken();
+          if (token) {
+            setJwt(token);
+            setLoggedIn(true);
+            const userInfo = await getUser(token);
+            setUser(userInfo);
+          } else {
+            setJwt(null);
+            setLoggedIn(false);
+            setUser(null);
+          }
+        };
+        restoreAuthState();
+      }
+
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   const getToken = async () => {
     const tokenData = await AsyncStorage.getItem('token');

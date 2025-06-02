@@ -16,8 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { calculateDistance } from '@/utils/geoUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { startLocationTracking, stopLocationTracking } from '@/background/locationTask';
-import * as Notifications from 'expo-notifications';
+/* import { startLocationTracking, stopLocationTracking } from '@/background/locationTask'; */
+/* import * as Notifications from 'expo-notifications'; */
 import { useFocusEffect } from 'expo-router';
 
 export interface RunContextType {
@@ -143,7 +143,7 @@ interface ILocation{
 export const RunContext = createContext<RunContextType>({} as RunContextType);
 
 export const RunProvider = ({children}: RunProviderProps) => {
-  
+    
   const { user, jwt } = useAuth();
   const navigation = useNavigation<any>();
   const mapRef = useRef<MapView>(null);
@@ -169,7 +169,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const [hasOpeningBox, setHasOpeningBox] = useState(true);
   const [showItems, setShowItems] = useState<boolean>(false)
   const [stopingRun, setStopingRun] = useState<boolean>(false)
-  let locationSubscription: Location.LocationSubscription | null = null;
+  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   let lastRouteCoordinates: {latitude: number; longitude: number, timestamp: number} | null = null;
   let accumulatedDistance = 0;
   let runSpeed = 0;
@@ -217,8 +217,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     startWatchingPosition()
   };
 
-
-
   const clearRun = () => {
     setDistance(0);
     setCalories(0);
@@ -240,12 +238,12 @@ export const RunProvider = ({children}: RunProviderProps) => {
     stopWatchingPosition();
     setIsRunning(false);
   };
-  
-  
+    
+    
   const stopWatchingPosition = () => {
     if (locationSubscription) {
-      locationSubscription.remove();
-      locationSubscription = null;
+      locationSubscription.current?.remove();
+      locationSubscription.current = null;
     }
   };
 
@@ -331,8 +329,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
       setIsRunning(false);
       setLoading(false)
       setFirstRouteCoordinates(null)
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      await Notifications.dismissAllNotificationsAsync();
+/*       await Notifications.cancelAllScheduledNotificationsAsync();
+      await Notifications.dismissAllNotificationsAsync(); */
 
       navigation.navigate('freeRun', { 
         distance: response?.data?.run?.distance ?? 0, 
@@ -364,11 +362,11 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }
 
   const startWatchingPosition = async () => {
-    locationSubscription = await Location.watchPositionAsync(
+    locationSubscription.current = await Location.watchPositionAsync(
       {
         accuracy: Location.Accuracy.Highest,
         timeInterval: 1000,
-        distanceInterval: 5,
+        distanceInterval: 1,
       },
       async (location) => {
         const { coords, timestamp } = location;
@@ -376,13 +374,14 @@ export const RunProvider = ({children}: RunProviderProps) => {
         setLocation(location as ILocation);
         if (isRunningRef.current && !stopingRun) {
           mapRef.current!.animateCamera({
-            pitch: 70,
             center: {
               latitude: coords.latitude,
               longitude: coords.longitude,
             },
+            pitch: 60,
+            heading: coords.heading || 0,
             zoom: 70,
-          });
+          }, { duration: 1000 });
           let distance = lastRouteCoordinates
             ? calculateDistance(
                 lastRouteCoordinates?.latitude,
@@ -513,14 +512,14 @@ export const RunProvider = ({children}: RunProviderProps) => {
         latitude: parseFloat(responseUpdateRun.spawned_boxes[0].latitude),
         longitude: parseFloat(responseUpdateRun.spawned_boxes[0].longitude)
       });
-      await Notifications.scheduleNotificationAsync({
+     /*  await Notifications.scheduleNotificationAsync({
         content: {
           title: "Recompensa disponível!",
           body: "Uma nova caixa apareceu no mapa. Vá buscá-la!",
           sound: true,
         },
         trigger: null,
-      });
+      }); */
     }
   };
 
@@ -637,8 +636,12 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }, [isRunning, stopingRun]);
 
   useEffect(() => {
+    return () => {
+      stopWatchingPosition();
+    };
+  }, []);
 
-    
+  useEffect(() => {
     initializeLocation()
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
@@ -652,6 +655,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
               setIsRunning(true);
             }, 100); // espera um pouco e ativa novamente
           } else {
+            await AsyncStorage.removeItem('@runData');
+            clearRun()
             setIsRunning(false);
           }
           const rawData = await AsyncStorage.getItem('@runData');
