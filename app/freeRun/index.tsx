@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import NavigationBar from '../../components/navigationBar';
-import FreeRunInfo from '../../components/FreeRunInfo';
+import FreeRunInfo, { RunStat } from '../../components/FreeRunInfo';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
@@ -36,7 +36,8 @@ const FreeRun = () => {
   const { firstRouteCoordinates } = route.params as any || {};
   const { lastRouteCoordinates }= route.params as any || {};
   const { allRoutes }: RouteParamsStart = route.params as any || [{}];
-  
+  const [showInfoPrint, setShowInfoPrint] = useState(false);
+
   
   const exampleRoute = [
     { latitude: Number(firstRouteCoordinates?.latitude || 0), longitude: Number(firstRouteCoordinates?.longitude || 0) },
@@ -53,6 +54,8 @@ const FreeRun = () => {
   const onShare = async () => {
     try {
       setImage('teste');
+      setShowInfoPrint(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
       const uri = await captureRef(viewRef, {
         format: 'png',
         quality: 1,
@@ -72,10 +75,11 @@ const FreeRun = () => {
       } else {
         console.error('CaptureRef retornou um URI vazio');
       }
-
-      setImage('');
     } catch (error) {
       console.error('Erro ao compartilhar a captura de tela: ', error);
+    } finally {
+      setImage('');
+      setShowInfoPrint(false);
     }
   };
 
@@ -169,17 +173,19 @@ const FreeRun = () => {
           :null}
         
         </View>
-        {image? 
-          <FreeRunInfo
-            maxSpeed={max_speed}
-            minSpeed={min_speed}
-            avgSpeed={avg_speed}
-            timeTotal={formatToMinutes(duration)}
-            calorias={Number(calories).toFixed(2)}
-            totalDistance={distance}
-            onShare={onShare}
-          />
-          :null}
+        {
+          showInfoPrint ? (
+          <View style={{flexDirection: 'row', bottom: 110, gap: 12, justifyContent: 'center'}}>
+            <RunStat image={require('../../assets/icons/minSpeed.png')} value={min_speed || 0 + ' KM'} label="Velocidade mínima" color='#555555' />
+            <RunStat image={require('../../assets/icons/averageSpeed.png')} value={avg_speed || 0 + ' KM'} label="Velocidade média" color='#3FDC81' />
+            <RunStat image={require('../../assets/icons/maxSpeed.png')} value={max_speed || 0 + ' KM'} label="Velocidade máxima" color='#555555' />
+            <RunStat image={require('../../assets/icons/total-time-icon.png')} value={formatToMinutes(duration) || '00:00'} label="Duração" color='#FC457B' />
+            <RunStat image={require('../../assets/icons/total-distance-icon.png')} value={distance || '0'} label="Corridos" color='#FFB905' />
+            <RunStat image={require('../../assets/icons/caloriesBlue.png')} value={Number(calories).toFixed(2) || '0'} label="Calorias" color='#006FDD' />
+          </View>
+
+          ): null
+        }
         <View style={styles.navigationBar}>
           <NavigationBar />
         </View>

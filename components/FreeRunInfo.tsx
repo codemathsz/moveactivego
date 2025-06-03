@@ -22,7 +22,7 @@ interface FreeRunInfoProps{
   onShare: () => Promise<void>
 }
 
-const RunStat = ({ image, value, label, color }: RunStatProps) => {
+export const RunStat = ({ image, value, label, color }: RunStatProps) => {
   return (
     <View style={styles.cardInfo}>
       <Image source={image} style={{ width: 20, height: 20, top: 4 }} />
