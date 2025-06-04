@@ -16,9 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { calculateDistance } from '@/utils/geoUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-/* import { startLocationTracking, stopLocationTracking } from '@/background/locationTask'; */
+import { startLocationTracking, stopLocationTracking } from '@/background/locationTask';
 /* import * as Notifications from 'expo-notifications'; */
-import { useFocusEffect } from 'expo-router';
 
 export interface RunContextType {
   location: ILocation | null;
@@ -292,7 +291,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
         });
         await AsyncStorage.setItem('@runStartTime', Date.now().toString());
         setHasSpawnedReward(false);
-        /* startLocationTracking(); */ // pausar notificação
+        startLocationTracking();
         startWatchingPosition();
         console.log("Corrida iniciada com sucesso!");
         navigation.navigate('Run');
@@ -324,12 +323,12 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if(response.success){
       await AsyncStorage.removeItem('@runData');
       clearRun()
-      /* stopLocationTracking() */
+      stopLocationTracking()
       startWatchingPosition()
       setIsRunning(false);
       setLoading(false)
       setFirstRouteCoordinates(null)
-/*       await Notifications.cancelAllScheduledNotificationsAsync();
+      /* await Notifications.cancelAllScheduledNotificationsAsync();
       await Notifications.dismissAllNotificationsAsync(); */
 
       navigation.navigate('freeRun', { 
