@@ -37,6 +37,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     spawnedBox,
     firstRouteCoordinates
   } = useRun()
+  const { appVersion } = useAuth();
   
   const navigation = useNavigation<any>();
 
@@ -66,118 +67,118 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     }
   },[location])
 
-  return (
-    <View style={styles.mapContainer}>
-      {showItems && (
-        <Modal transparent={true} visible={true} animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <View style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10}}>
-                <Text>Items resgatados!</Text>
-                <TouchableOpacity onPress={() => handleCloseShowItems()}>
-                  <Text style={styles.closeButtonText}>✖</Text>
-                </TouchableOpacity>
+    return (
+      <View style={styles.mapContainer}>
+        <Text style={styles.versionText}>{appVersion}</Text>
+        {showItems && (
+          <Modal transparent={true} visible={true} animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <View style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10}}>
+                  <Text>Items resgatados!</Text>
+                  <TouchableOpacity onPress={() => handleCloseShowItems()}>
+                    <Text style={styles.closeButtonText}>✖</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {
+                  spawnedBoxItems?.map((item) =>{
+                    return (
+                      <View key={item.id}>
+                        <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                        <Text style={styles.itemName}>{item.name}</Text>
+                        <Text style={styles.itemRarity}>{item.rarity}</Text>
+                      </View>
+                    )
+                  })
+                }
               </View>
-              
-              {
-                spawnedBoxItems?.map((item) =>{
-                  return (
-                    <View key={item.id}>
-                      <Image source={{ uri: item.picture }} style={styles.itemImage} />
-                      <Text style={styles.itemName}>{item.name}</Text>
-                      <Text style={styles.itemRarity}>{item.rarity}</Text>
-                    </View>
-                  )
-                })
-              }
             </View>
-          </View>
-        </Modal>
-      )}
-      {location ? (
-        <MapView
-          style={styles.map}
-          ref={mapRef}
-          initialRegion={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005
-          }}
-          showsMyLocationButton
-        >
-          {
-            location && (
-              <Marker 
-                coordinate={{
-                  latitude: location.coords.latitude,
-                  longitude: location.coords.longitude
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
-              >
-                <Image
-                  source={require('../assets/icons/run-icon.png')}
-                  style={{ width: 36, height: 36 }}
-                  resizeMode="contain"
+          </Modal>
+        )}
+        {location ? (    
+          <MapView
+            style={[styles.map]}
+            ref={mapRef}
+            initialRegion={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.005,
+              longitudeDelta: 0.005
+            }}
+            showsMyLocationButton
+          >
+            {
+              location && (
+                <Marker 
+                  coordinate={{
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude
+                  }}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                >
+                  <Image
+                    source={require('../assets/icons/run-icon.png')}
+                    style={{ width: 36, height: 36 }}
+                    resizeMode="contain"
+                  />
+                </Marker>
+              )
+            }
+            {
+              isRunning && firstRouteCoordinates && (
+                <Marker 
+                  coordinate={{
+                    latitude: firstRouteCoordinates.latitude,
+                    longitude: firstRouteCoordinates.longitude
+                  }}
                 />
-              </Marker>
-            )
-          }
-          {
-            isRunning && firstRouteCoordinates && (
-              <Marker 
-                coordinate={{
-                  latitude: firstRouteCoordinates.latitude,
-                  longitude: firstRouteCoordinates.longitude
-                }}
+              )
+            }
+            {isRunning && routeCoordinates && (
+              <Polyline
+                coordinates={routeCoordinates?.map(route => ({
+                  latitude: route.latitude,
+                  longitude: route.longitude,
+                }))}
+                strokeColor="#FF0000" 
+                strokeWidth={3}
               />
-            )
-          }
-          {isRunning && routeCoordinates && (
-            <Polyline
-              coordinates={routeCoordinates?.map(route => ({
-                latitude: route.latitude,
-                longitude: route.longitude,
-              }))}
-              strokeColor="#FF0000" 
-              strokeWidth={3}
-            />
-          )}
-          {isRunning && spawnedBox && (
-            <Marker
-              coordinate={{
-                latitude: spawnedBox?.latitude,
-                longitude: spawnedBox?.longitude
-              }}
-              title="Recompensa!"
-              description="Pegue essa caixa de recompensa 🏆"
-              image={require('../assets/icons/move.png')}
-            />
-          )}
-        </MapView>
+            )}
+            {isRunning && spawnedBox && (
+              <Marker
+                coordinate={{
+                  latitude: spawnedBox?.latitude,
+                  longitude: spawnedBox?.longitude
+                }}
+                title="Recompensa!"
+                description="Pegue essa caixa de recompensa 🏆"
+                image={require('../assets/icons/move.png')}
+              />
+            )}
+          </MapView>
+        ) : null}
 
-      ) : null}
+        {!props.dashboard && (
+          <CustomButton 
+            onPress={() => toggleRun()} 
+            style={styles.buttonPause} 
+            loading={loading} 
+            icon={
+              <Ionicons name="pause" size={24} color="white" />
+            }
+          />
 
-      {!props.dashboard && (
-        <CustomButton 
-          onPress={() => toggleRun()} 
-          style={styles.buttonPause} 
-          loading={loading} 
-          icon={
-            <Ionicons name="pause" size={24} color="white" />
-          }
-        />
+        )}
 
-      )}
-
-      {!props.card && (
-        <View style={styles.customButton}>
-          
-          <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
-        </View>
-      )}
-    </View>
-  );
+        {!props.card && (
+          <View style={styles.customButton}>
+            
+            <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
+          </View>
+        )}
+      </View>
+    );
 };
 
 const styles = StyleSheet.create({
@@ -218,11 +219,14 @@ const styles = StyleSheet.create({
     color: 'gray',
   },
   mapContainer: {
+    flex: 1,
+    position: 'relative',
     height: '100%',
     width: '100%',
     justifyContent: 'flex-end',
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'column'
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -276,6 +280,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   buttonPause: {
+    position: 'absolute',
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -283,7 +288,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
+    top: 240,
     right: 30, // só usa um dos dois: left ou right
     bottom: 450,
     zIndex: 10,
@@ -342,6 +347,17 @@ const styles = StyleSheet.create({
     color: '#555555',
     fontSize: 16,
     textAlign: 'center',
+  },
+  versionText: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    fontSize: 10,
+    color: 'gray',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    zIndex: 10
   },
 });
 

@@ -48,7 +48,7 @@ const RunScreen = () => {
       <View style={styles.statsBar}>
         <RunBar/>
       </View>
-      <MapArea start={true} dashboard={false}/>
+      <MapArea start={true} dashboard={false} card={true}/>
       <View style={styles.navigationBar}>
         <NavigationBar />
       </View>

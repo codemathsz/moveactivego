@@ -9,6 +9,7 @@ import * as FileSystem from 'expo-file-system';
 import { RoutesType, useRun } from '../../contexts/RunContext';
 import { colors } from '../../constants/Screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RouteParamsStart {
   avg_speed: string
@@ -37,7 +38,7 @@ const FreeRun = () => {
   const { lastRouteCoordinates }= route.params as any || {};
   const { allRoutes }: RouteParamsStart = route.params as any || [{}];
   const [showInfoPrint, setShowInfoPrint] = useState(false);
-
+  const { appVersion } = useAuth();
   
   const exampleRoute = [
     { latitude: Number(firstRouteCoordinates?.latitude || 0), longitude: Number(firstRouteCoordinates?.longitude || 0) },
@@ -137,6 +138,7 @@ const FreeRun = () => {
         </TouchableOpacity>
 
         <View style={[styles.mapContainer, { paddingTop: 5 }]}>
+          <Text style={styles.versionText}>{appVersion}</Text>
           <MapView
             style={styles.map}
             initialRegion={{
@@ -202,6 +204,7 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+    position: 'relative',
     paddingHorizontal: 16,
     marginVertical: 16,
     borderRadius: 20,
@@ -242,6 +245,17 @@ const styles = StyleSheet.create({
     top: 16,
     left: 16,
     zIndex: 10,
+  },
+  versionText: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    fontSize: 10,
+    color: 'gray',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    zIndex: 10
   },
 });
 

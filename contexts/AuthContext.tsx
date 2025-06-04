@@ -12,6 +12,7 @@ export interface AuthContextType {
   updateProfile: (jwt: string) => Promise<void>;
   isLoggedIn: boolean;
   jwt: string | null;
+  appVersion: string
 }
 
 interface AuthProviderProps {
@@ -29,6 +30,7 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   const [jwt, setJwt] = useState<string | null>("");
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const appState = useRef(AppState.currentState);
+  const appVersion: string = "v1.0.24";
 
   useEffect(() => {
     setIsLoggedIn(loggedIn);
@@ -152,5 +154,5 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     setUser(userInfo);
   };
 
-  return <AuthContext.Provider value={{ user, login, logout, updateProfile, isLoggedIn, jwt }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, login, logout, updateProfile, isLoggedIn, jwt, appVersion }}>{children}</AuthContext.Provider>;
 };
