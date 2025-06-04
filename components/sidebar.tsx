@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import IconFeather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -104,11 +104,32 @@ const MenuItem = ({ icon, title, screen, closeDrawer }: MenuItemProps & { closeD
 
 const Footer = () => {
   const auth = useAuth();
+
+  const handleOpenAppInStore = () => {
+
+    const ANDROID_PACKAGE_NAME = 'com.MoveActiveGo';
+    const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ABC123XYZ';
+
+    const url = Platform.select({
+      android: `market://details?id=${ANDROID_PACKAGE_NAME}`,
+      ios: TESTFLIGHT_URL,
+    });
+
+    if (url) {
+      Linking.openURL(url).catch((err) => {
+        console.error('Erro ao abrir a loja:', err);
+      });
+    }
+  }
+
   return (
-    <TouchableOpacity style={[styles.footerContainer, styles.menuItem]} onPress={() => auth.logout()}>
-      <Ionicons name='exit-outline' size={24} color='#FEFEFE' />
-      <Text style={[styles.menuItemText]}>Sair</Text>
-    </TouchableOpacity>
+    <View style={[styles.footerContainer]}>
+      <TouchableOpacity style={styles.menuItem} onPress={() => auth.logout()}>
+        <Ionicons name='exit-outline' size={24} color='#FEFEFE' />
+        <Text style={[styles.menuItemText]}>Sair</Text>
+      </TouchableOpacity>
+      <Text onPress={() => handleOpenAppInStore()} style={{fontSize: 16, textDecorationLine: 'underline', color: '#FFF'}}>{auth.appVersion}</Text>
+    </View>
   );
 };
 
@@ -157,6 +178,9 @@ const styles = StyleSheet.create({
     color: "#FEFEFE",
   },
   footerContainer: {
+    display: "flex",
+    flexDirection: 'column',
+    gap: 16,
     marginBottom: 64,
   },
   flexFill: {
