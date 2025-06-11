@@ -8,7 +8,14 @@ import React, {
   useCallback,
 } from 'react';
 import {finishRun, handleRequestOpenBox, postRun, updateRun} from '../apis/user.api';
-import * as Location from 'expo-location';
+import {
+  requestForegroundPermissionsAsync,
+  requestBackgroundPermissionsAsync,
+  LocationSubscription,
+  getCurrentPositionAsync,
+  watchPositionAsync,
+  Accuracy
+} from 'expo-location';
 import MapView from 'react-native-maps';
 import { formatDateToISO, formatTime } from '../utils';
 import { useAuth } from './AuthContext';
@@ -16,7 +23,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Alert, AppState, AppStateStatus } from 'react-native';
 import { calculateDistance } from '@/utils/geoUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { startLocationTracking, stopLocationTracking } from '@/background/locationTask';
+import { startLocationTask, stopLocationTask } from '@/tasks/locationTask';
+import { getStorageLocation, removeStorageLocation } from '@/libs/asyncStorage/locationStorage';
 /* import * as Notifications from 'expo-notifications'; */
 
 export interface RunContextType {
@@ -168,7 +176,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const [hasOpeningBox, setHasOpeningBox] = useState(true);
   const [showItems, setShowItems] = useState<boolean>(false)
   const [stopingRun, setStopingRun] = useState<boolean>(false)
-  const locationSubscription = useRef<Location.LocationSubscription | null>(null);
+  const locationSubscription = useRef<LocationSubscription | null>(null);
   let lastRouteCoordinates: {latitude: number; longitude: number, timestamp: number} | null = null;
   let accumulatedDistance = 0;
   let runSpeed = 0;
@@ -201,22 +209,18 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
 
   const initializeLocation = async () => {
-    let {status} = await Location.requestForegroundPermissionsAsync();
+    let {status} = await requestForegroundPermissionsAsync();
     if(status !== "granted"){
       console.log("Permissão negada.");
       return;
     }
-    let { status: bgStatus } = await Location.requestBackgroundPermissionsAsync();
-    if (bgStatus !== "granted") {
-      console.warn("Permissão de localização em segundo plano negada.");
-    }
-    let userLocation = await Location.getCurrentPositionAsync({})
+    let userLocation = await getCurrentPositionAsync({})
 
     setLocation(userLocation as ILocation)
     startWatchingPosition()
   };
 
-  const clearRun = () => {
+  const clearRun = async () => {
     setDistance(0);
     setCalories(0);
     clearInterval(intervalRef.current!);
@@ -236,6 +240,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
     accumulatedDistance = 0;
     stopWatchingPosition();
     setIsRunning(false);
+    await stopLocationTask()
+    await removeStorageLocation()
   };
     
     
@@ -246,55 +252,85 @@ export const RunProvider = ({children}: RunProviderProps) => {
     }
   };
 
+  const verifyBackgroundLocationPermission = async (): Promise<boolean> => {
+    const backgroundPermissions = await requestBackgroundPermissionsAsync();
+    if (!backgroundPermissions.granted) {
+      Alert.alert(
+        "Localização",
+        'É necessário permitir que o App tenha acesso a localização em segundo plano. Acesse as configurações do dispositivo e habilite "Permitir o tempo todo".'
+      );
+      setLoading(false);
+      return false;
+    }
+    return true;
+  };
+
+  const ensureCity = async (): Promise<string> => {
+    if (city) return city;
+    const lat = location?.coords?.latitude ?? 0;
+    const lon = location?.coords?.longitude ?? 0;
+    const currentCity = await fetchCity(lat, lon);
+    setCity(currentCity);
+    return currentCity;
+  };
+
+  const buildInitialRouteList = (): RoutesType[] => {
+    if(!location) return []
+    const { latitude = 0, longitude = 0 } = location.coords;
+    const timestamp = formatDateToISO(location.timestamp || 0);
+
+    return [
+      {
+        latitude,
+        longitude,
+        speed: 0,
+        timestamp,
+        distance: 0
+      }
+    ];
+  };
+
+  const buildRunDTO = (city: string, routes: RoutesType[]): IRun => ({
+    name: "Corrida Rápida",
+    start_date: formatDateToISO(new Date()),
+    city,
+    routes,
+    calories: 0
+  });
+
+  const handleSuccessfulRunStart = async (runData: IRun, initialRoute: RoutesType) => {
+    setIsRunning(true);
+    await startLocationTask()
+    isRunningRef.current = true;
+    setRun(runData);
+    setFirstRouteCoordinates({
+      latitude: initialRoute.latitude,
+      longitude: initialRoute.longitude,
+    });
+    setHasSpawnedReward(false);
+    startWatchingPosition();
+    console.log("Corrida iniciada com sucesso!");
+    navigation.navigate('Run');
+  };
+
   const startRun = async (): Promise<void> => {
     if (!jwt || !location) return;
 
     setLoading(true);
 
     try {
-      let currentCity = city;
-      if (!currentCity) {
-        const lat = location.coords.latitude ?? 0;
-        const lon = location.coords.longitude ?? 0;
-        currentCity = await fetchCity(lat, lon);
-        setCity(currentCity);
-      }
+      const granted = await verifyBackgroundLocationPermission();
+      if (!granted) return;
 
-      const initialRoute = {
-        latitude: location.coords.latitude || 0,
-        longitude: location.coords.longitude || 0,
-        speed: 0,
-        timestamp: formatDateToISO(location.timestamp || 0),
-        distance: 0
-      };
-
-      const initialRouteList = [initialRoute];
+      const currentCity = await ensureCity();
+      const initialRouteList = buildInitialRouteList();
       setRouteCoordinates(initialRouteList);
 
-      const dto: IRun = {
-        name: "Corrida Rápida",
-        start_date: formatDateToISO(new Date()),
-        city: currentCity,
-        routes: initialRouteList,
-        calories: 0
-      };
-
-      const responseStartRun = await postRun(jwt, dto);
+      const runDTO: IRun = buildRunDTO(currentCity, initialRouteList);
+      const responseStartRun = await postRun(jwt, runDTO);
 
       if (responseStartRun.success || responseStartRun["success"]) {
-        setIsRunning(true);
-        isRunningRef.current = true;
-        setRun(responseStartRun?.data?.run);
-        setFirstRouteCoordinates({
-          latitude: initialRoute.latitude,
-          longitude: initialRoute.longitude,
-        });
-        await AsyncStorage.setItem('@runStartTime', Date.now().toString());
-        setHasSpawnedReward(false);
-        startLocationTracking();
-        startWatchingPosition();
-        console.log("Corrida iniciada com sucesso!");
-        navigation.navigate('Run');
+        handleSuccessfulRunStart(responseStartRun.data.run, initialRouteList[0]);
       } else {
         console.warn("Erro ao iniciar corrida:", responseStartRun);
       }
@@ -323,7 +359,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if(response.success){
       await AsyncStorage.removeItem('@runData');
       clearRun()
-      stopLocationTracking()
+      
       startWatchingPosition()
       setIsRunning(false);
       setLoading(false)
@@ -361,11 +397,11 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }
 
   const startWatchingPosition = async () => {
-    locationSubscription.current = await Location.watchPositionAsync(
+    locationSubscription.current = await watchPositionAsync(
       {
-        accuracy: Location.Accuracy.Highest,
+        accuracy: Accuracy.High,
         timeInterval: 1000,
-        distanceInterval: 1,
+        distanceInterval: 5,
       },
       async (location) => {
         const { coords, timestamp } = location;
@@ -456,18 +492,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
               setCalories((prevCalories) => prevCalories + calories);
             }
           }
-
-          await AsyncStorage.setItem('@runData', JSON.stringify({
-            route: routeCoordinates,
-            distance: distance,
-            calories: calories,
-            lastCoord: {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-            },
-            lastTimestamp: timestamp,
-            time: timer
-          }));
         }
       }
     );
@@ -616,9 +640,9 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
     if(!stopingRun){
       if (isRunning) {
-        intervalRef.current = setInterval(() => {
-          setTimer(prevTimer => prevTimer + 1);
-        }, 1000);
+          intervalRef.current = setInterval(() => {
+            setTimer(prevTimer => prevTimer + 1);
+          }, 1000);
       } else {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
@@ -640,54 +664,59 @@ export const RunProvider = ({children}: RunProviderProps) => {
     };
   }, []);
 
+  const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+    const prevAppState = appState.current;
+    appState.current = nextAppState;
+
+    if (prevAppState.match(/inactive|background/) && nextAppState === 'active') {
+      const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
+      const { isRunning } = JSON.parse(isRunningData || '{}');
+      
+      const storageData = await getStorageLocation();
+      
+      // Popular estado com dados da corrida
+      setRoutesToSend(storageData.routes || []);
+      setDistance(storageData.distance || 0);
+      setCalories(storageData.calories || 0);
+
+      // Calcular tempo decorrido a partir da data de início
+      if (storageData.startRunDate) {
+        const startTime = new Date(storageData.startRunDate).getTime();
+        const now = Date.now();
+        const elapsedInSeconds = Math.floor((now - startTime) / 1000);
+        setTimer(elapsedInSeconds);
+      }
+
+      if (isRunning) {
+        setIsRunning(false);
+        setTimeout(() => {
+          setIsRunning(true);
+        }, 100); // espera um pouco e ativa novamente
+        isRunningRef.current = isRunning;
+      } else {
+        await AsyncStorage.removeItem('isRunningAsyncStorage');
+        clearRun()
+        setIsRunning(false);
+        isRunningRef.current = isRunning;
+      }
+    }
+
+    if (nextAppState === 'background') {
+      await AsyncStorage.setItem(
+        'isRunningAsyncStorage',
+        JSON.stringify({ isRunning: isRunningRef.current })
+      );
+
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+  };
+
   useEffect(() => {
     initializeLocation()
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-
-        const loadBackgroundData = async () => {
-          const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
-          const parsed = JSON.parse(isRunningData || '{}');
-          if (parsed.isRunning) {
-            setIsRunning(false);
-            setTimeout(() => {
-              setIsRunning(true);
-            }, 100); // espera um pouco e ativa novamente
-          } else {
-            await AsyncStorage.removeItem('@runData');
-            clearRun()
-            setIsRunning(false);
-          }
-          const rawData = await AsyncStorage.getItem('@runData');
-          if (rawData) {
-            const runData = JSON.parse(rawData);
-            setRouteCoordinates(runData.route);
-            setDistance(runData.distance);
-            setCalories(runData.calories);
-            console.log("Run data: ", runData.runTime);
-            
-            setTimer(runData.runTime);
-          }
-        }
-        loadBackgroundData();
-      }
-  
-      if (nextAppState === 'background') {
-        const saveStateRunning = async () => {
-          await AsyncStorage.setItem(
-            'isRunningAsyncStorage',
-            JSON.stringify({ isRunning: isRunningRef.current })
-          );
-        }
-        saveStateRunning();
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-      }
-  
-      appState.current = nextAppState;
-    };
+   
   
     const subscription = AppState.addEventListener('change', handleAppStateChange);
   
@@ -695,7 +724,11 @@ export const RunProvider = ({children}: RunProviderProps) => {
       subscription.remove();
     };
   }, []);
-
+  
+ /*  useFocusEffect(() =>{
+    initializeLocation()
+  })
+ */
   return (
     <RunContext.Provider
       value={{

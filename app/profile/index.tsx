@@ -35,8 +35,6 @@ const ProfileScreen = () => {
     try {
       if (jwt) {
         const userInfo = await getUser(jwt);
-        console.log('userInfo: ',userInfo);
-        
         setName(userInfo.name);
         setUserTotalCalories(userInfo?.total_calories);
         setUserTotalDistance(userInfo?.total_distance);

@@ -62,7 +62,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         },
-        zoom: 70,
+        zoom: 60,
       });
     }
   },[location])
