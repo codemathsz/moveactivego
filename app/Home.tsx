@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import CustomButton from '../components/customButton';
-import { useRouter } from 'expo-router';
 
 const HomeScreen = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);

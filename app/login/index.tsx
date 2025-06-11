@@ -5,7 +5,6 @@ import CustomLabel from '../../components/customLabel';
 import { useAuth } from '../../contexts/AuthContext';
 import LogoAndTagline from '../../components/LogoAndTagline';
 import CustomButton from '@/components/customButton';
-import { useRouter } from "expo-router";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";

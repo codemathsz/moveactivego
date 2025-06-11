@@ -6,7 +6,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
 import { RunProvider } from '../contexts/RunContext';
 import { screens } from '../constants/Screen';
-import HomeScreen from './index';
+import HomeScreen from './Home';
 import RegisterScreen from './register';
 import LoginScreen from './login';
 import ResetPassword from './resetPassword';
@@ -21,6 +21,8 @@ import { StatusBar } from 'react-native';
 import InventoryScreen from './inventory';
 import ItemScreen from './item';
 import * as Notifications from 'expo-notifications';
+import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 const RootStack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -143,28 +145,36 @@ function App() {
       shouldShowAlert: true,
       shouldPlaySound: false,
       shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
 
   return (
-    <RootSiblingParent>
-      <AuthProvider
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={(value: any) => {
-          setIsLoggedIn(value);
-        }}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        {isLoggedIn ? (
-          <RunProvider>
-            <ProfileProvider>
-              <LoggedInDrawer />
-            </ProfileProvider>
-          </RunProvider>
-        ) : (
-          <HomeStack />
-        )}
-      </AuthProvider>
-    </RootSiblingParent>
+    <NavigationContainer>
+      <SafeAreaProvider>
+        <SafeAreaView style={{ flex: 1 }}>
+          <RootSiblingParent>
+            <AuthProvider
+              isLoggedIn={isLoggedIn}
+              setIsLoggedIn={(value: any) => {
+                setIsLoggedIn(value);
+              }}>
+              <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+              {isLoggedIn ? (
+                <RunProvider>
+                  <ProfileProvider>
+                    <LoggedInDrawer />
+                  </ProfileProvider>
+                </RunProvider>
+              ) : (
+                <HomeStack />
+              )}
+            </AuthProvider>
+          </RootSiblingParent>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </NavigationContainer>
   );
 }
 

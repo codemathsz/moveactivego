@@ -17,10 +17,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { ResetPasswordConfirmation } from "../../interfaces/reset-password-confirmation.interface";
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
 import Toast from "react-native-root-toast";
-import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
 const ResetPassword = () =>{
-  const router = useRouter()
+  const navigation = useNavigation<any>()
   const CELL_COUNT = 5;
   const [sendEmail, setSendEmail] = useState<boolean>(false)
   const [email, setEmail] = useState<string>('')
@@ -88,7 +88,7 @@ const ResetPassword = () =>{
       }
       const response = await resetPasswordConfirmation(jwt!, dto)
       if(response)
-        router.push("/login")
+        navigation.navigate("Login" as any)
     }
   }
   return(
