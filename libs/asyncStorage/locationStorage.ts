@@ -12,6 +12,7 @@ type RoutesLocationProps = {
 
 type getLocationProps ={
     routes: RoutesLocationProps[]
+    routeToSend: RoutesLocationProps[]
     distance: number
     calories: number
     startRunDate: any
@@ -19,6 +20,7 @@ type getLocationProps ={
 
 type saveLocationProps ={
     route: RoutesLocationProps
+    routeToSend: RoutesLocationProps
     distance: number
     calories: number
     startRunDate: any
@@ -32,6 +34,7 @@ export async function getStorageLocation(): Promise<getLocationProps>{
         distance: response.distance ?? 0,
         routes: response.routes ?? [],
         startRunDate: response.startRunDate ?? null,
+        routeToSend: response.routeToSend ?? []
     };
 }
 
@@ -46,6 +49,10 @@ export async function saveStorageLocation(newLocation:saveLocationProps){
     storage.distance = newLocation.distance
     storage.startRunDate = newLocation.startRunDate
     storage.routes.push(newLocation.route)
+    if (newLocation.routeToSend && newLocation.routeToSend.latitude && newLocation.routeToSend.longitude) {
+    storage.routeToSend.push(newLocation.routeToSend);
+    }
+
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(storage))
 }
 

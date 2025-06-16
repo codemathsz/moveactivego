@@ -30,7 +30,7 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   const [jwt, setJwt] = useState<string | null>("");
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const appState = useRef(AppState.currentState);
-  const appVersion: string = "v1.0.24";
+  const appVersion: string = "v1.0.25";
 
   useEffect(() => {
     setIsLoggedIn(loggedIn);

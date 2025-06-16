@@ -35,7 +35,10 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     showItems,
     handleCloseShowItems,
     spawnedBox,
-    firstRouteCoordinates
+    firstRouteCoordinates,
+    locationForegroundPermissions,
+    startWatchingPosition,
+    locationSubscription
   } = useRun()
   const { appVersion } = useAuth();
   
@@ -56,16 +59,20 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
   };
 
   useEffect(() =>{
-    if(location){
-      mapRef.current?.animateCamera({
-        center: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-        zoom: 60,
-      });
-    }
+   console.log("LOCATION: ",location );
+   
   },[location])
+
+  useEffect(() =>{
+    if(!locationForegroundPermissions?.granted){
+      return
+    }
+
+    startWatchingPosition()
+
+    return () => locationSubscription?.remove()
+    
+  },[locationForegroundPermissions])
 
     return (
       <View style={styles.mapContainer}>
@@ -96,7 +103,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
             </View>
           </Modal>
         )}
-        {location ? (    
+        {location && locationForegroundPermissions?.granted ? (    
           <MapView
             style={[styles.map]}
             ref={mapRef}
@@ -157,7 +164,13 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
               />
             )}
           </MapView>
-        ) : null}
+        ) : (
+          <View style={{flex: 1, display: 'flex',justifyContent: 'center', alignItems: 'center', paddingLeft: 20}}>
+            <View>
+              <Text>Erro ao obter localização do usuário. Você precisa permitir que o aplicativo tenha acesso a localização.</Text>
+            </View>
+          </View>
+        )}
 
         {!props.dashboard && (
           <CustomButton 

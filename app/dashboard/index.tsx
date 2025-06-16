@@ -7,7 +7,6 @@ import { AppRegistry, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapArea from "@/components/mapArea";
 import { useNavigation } from "@react-navigation/native";
-import * as Notifications from 'expo-notifications';
 interface ILocation{
   coords: {
     latitude: number;
@@ -24,15 +23,6 @@ interface ILocation{
 
 const DashboardScreen = () =>{
   const navigation = useNavigation<any>();
-
-  useEffect(() =>{
-    (async () =>{
-      const { status: notifStatus } = await Notifications.requestPermissionsAsync();
-      if (notifStatus !== 'granted') {
-        console.warn("Permissão de notificações negada.");
-      }
-    })()
-  },[])
 
   return (
     <SafeAreaView style={styles.container}>

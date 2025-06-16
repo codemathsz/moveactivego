@@ -214,6 +214,8 @@ export const updateRun = async (token: string, runId: any,  dto: RunUpdateDTO) =
 
 export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) => {
   try {
+    console.log("dto stop run ", dto);
+    
     const response = await axiosInstanceAuthoraized(token).post(`/run/finish/${runId}`, dto);
     return response.data;
   } catch (error: any) {

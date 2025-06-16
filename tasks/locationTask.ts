@@ -11,7 +11,7 @@ import { calculateDistance } from '@/utils/geoUtils';
 import { formatDateToISO } from '@/utils';
 
 export const BACKGROUND_LOCATION_TASK = 'location-tracking';
-
+let accumulatedDistance = 0
 TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) => {
   try {
     if (error) {
@@ -23,18 +23,29 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) =>
       const speed = coords?.speed! > 0 ? Number(coords.speed) : 0
       const routesCoordinates = await getStorageLocation()
       const lastRouterCoordinates = routesCoordinates?.routes?.[routesCoordinates.routes.length - 1]
-
+      let routeToSend: any = []
       const distance = lastRouterCoordinates ? calculateDistance(
         lastRouterCoordinates.latitude,
         lastRouterCoordinates.longitude,
         coords.latitude,
         coords.longitude
       ) : 0;
+      accumulatedDistance += distance;
+      if (Number(accumulatedDistance.toFixed(2)) >= 0.02) {
+        accumulatedDistance = 0
+        routeToSend = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          speed: coords?.speed! > 0 ? Number(coords.speed) : 0,
+          timestamp: formatDateToISO(timestamp),
+          distance: distance,
+        }
+      }
       const currentLocation = {
         latitude: coords.latitude,
         longitude: coords.longitude,
         timestamp: formatDateToISO(timestamp),
-        speed: speed,
+        speed: coords?.speed! > 0 ? Number(coords.speed) : 0,
         distance: distance
       }
       
@@ -44,8 +55,9 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) =>
 
       const currentRouteCordinates = {
         route: currentLocation,
+        routeToSend: routeToSend,
         distance,
-        calories: routesCoordinates?.calories + calories, 
+        calories: (routesCoordinates?.calories ?? 0) + calories, 
         startRunDate: routesCoordinates?.startRunDate === null ? new Date() : routesCoordinates?.startRunDate
       }
 
@@ -66,7 +78,6 @@ export async function startLocationTask() {
       await stopLocationTask()
     }
     await startLocationUpdatesAsync(BACKGROUND_LOCATION_TASK, {
-      accuracy: Accuracy.Highest,
       distanceInterval: 1,
       timeInterval: 1000
     });

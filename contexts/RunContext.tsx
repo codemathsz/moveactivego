@@ -9,12 +9,13 @@ import React, {
 } from 'react';
 import {finishRun, handleRequestOpenBox, postRun, updateRun} from '../apis/user.api';
 import {
-  requestForegroundPermissionsAsync,
+  useForegroundPermissions,
   requestBackgroundPermissionsAsync,
   LocationSubscription,
   getCurrentPositionAsync,
   watchPositionAsync,
-  Accuracy
+  Accuracy,
+  LocationPermissionResponse
 } from 'expo-location';
 import MapView from 'react-native-maps';
 import { formatDateToISO, formatTime } from '../utils';
@@ -33,7 +34,7 @@ export interface RunContextType {
   isRunning: boolean;
   startRun: () => Promise<void>;
   stopRun: () => Promise<void>;
-  mapRef: RefObject<MapView>;
+  mapRef: RefObject<MapView | null>;
   routeCoordinates: RoutesType[];
   loading: boolean;
   formattedTimer: string;
@@ -48,6 +49,9 @@ export interface RunContextType {
     latitude: number;
     longitude: number;
   } | null;
+  locationForegroundPermissions: LocationPermissionResponse | null
+  startWatchingPosition: () => void,
+  locationSubscription: LocationSubscription | null
 }
 
 export type RoutesType ={
@@ -153,7 +157,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
     
   const { user, jwt } = useAuth();
   const navigation = useNavigation<any>();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<MapView | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [location, setLocation] = useState<ILocation | null>(null);
   const [city, setCity] = useState<string>('');
@@ -176,14 +180,14 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const [hasOpeningBox, setHasOpeningBox] = useState(true);
   const [showItems, setShowItems] = useState<boolean>(false)
   const [stopingRun, setStopingRun] = useState<boolean>(false)
-  const locationSubscription = useRef<LocationSubscription | null>(null);
+  let locationSubscription: LocationSubscription | null = null
   let lastRouteCoordinates: {latitude: number; longitude: number, timestamp: number} | null = null;
   let accumulatedDistance = 0;
   let runSpeed = 0;
   const minDistance = 0.001;
   const isRunningRef = useRef(isRunning);
   const appState = useRef(AppState.currentState);
-
+  const [locationForegroundPermissions, requestLocationForegroundPermissions] = useForegroundPermissions()
 
   const fetchCity = async (latitude: number, longitude: number): Promise<string> => {
     try {
@@ -209,15 +213,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
 
   const initializeLocation = async () => {
-    let {status} = await requestForegroundPermissionsAsync();
-    if(status !== "granted"){
-      console.log("Permissão negada.");
-      return;
-    }
-    let userLocation = await getCurrentPositionAsync({})
-
-    setLocation(userLocation as ILocation)
-    startWatchingPosition()
+    
   };
 
   const clearRun = async () => {
@@ -238,19 +234,11 @@ export const RunProvider = ({children}: RunProviderProps) => {
     setCity('');
     setLocation(null);
     accumulatedDistance = 0;
-    stopWatchingPosition();
     setIsRunning(false);
     await stopLocationTask()
     await removeStorageLocation()
   };
     
-    
-  const stopWatchingPosition = () => {
-    if (locationSubscription) {
-      locationSubscription.current?.remove();
-      locationSubscription.current = null;
-    }
-  };
 
   const verifyBackgroundLocationPermission = async (): Promise<boolean> => {
     const backgroundPermissions = await requestBackgroundPermissionsAsync();
@@ -319,9 +307,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     setLoading(true);
 
     try {
-      const granted = await verifyBackgroundLocationPermission();
-      if (!granted) return;
-
       const currentCity = await ensureCity();
       const initialRouteList = buildInitialRouteList();
       setRouteCoordinates(initialRouteList);
@@ -346,9 +331,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if(!jwt) return
     setStopingRun(true)
     setLoading(true)
-    let routes = [...routesToSend];
-
-    routes.push(routeCoordinates[routeCoordinates.length - 1] ?? routeCoordinates[0]);
+    let routes = routesToSend.filter(r => r && r.latitude && r.longitude);
+    const lastCoord = routeCoordinates[routeCoordinates.length - 1] ?? routeCoordinates[0];
+    if (lastCoord?.latitude && lastCoord?.longitude) {
+      routes.push(lastCoord);
+    }
+    console.log("STOP RUN ", routes);
+    
     let finishRunDTO: RunFinishDTO = {
       end_date: formatDateToISO(new Date()),
       calories: calories!,
@@ -397,7 +386,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }
 
   const startWatchingPosition = async () => {
-    locationSubscription.current = await watchPositionAsync(
+    watchPositionAsync(
       {
         accuracy: Accuracy.High,
         timeInterval: 1000,
@@ -405,7 +394,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
       },
       async (location) => {
         const { coords, timestamp } = location;
-
+        console.log("WATCH: ", location);
+        
         setLocation(location as ILocation);
         if (isRunningRef.current && !stopingRun) {
           mapRef.current!.animateCamera({
@@ -494,7 +484,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
           }
         }
       }
-    );
+    ).then((response) => locationSubscription = response);
   };
 
   const openBox = async (jwt: string, boxId: number) =>{
@@ -658,12 +648,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     };
   }, [isRunning, stopingRun]);
 
-  useEffect(() => {
-    return () => {
-      stopWatchingPosition();
-    };
-  }, []);
-
   const handleAppStateChange = async (nextAppState: AppStateStatus) => {
     const prevAppState = appState.current;
     appState.current = nextAppState;
@@ -675,11 +659,23 @@ export const RunProvider = ({children}: RunProviderProps) => {
       const storageData = await getStorageLocation();
       
       // Popular estado com dados da corrida
-      setRoutesToSend(storageData.routes || []);
+      console.log("storageData.routes", storageData.routes);
+      console.log("storageData.routeToSend ", storageData.routeToSend );
+
+      
+      setRouteCoordinates(prev => [...prev, ...(storageData.routes || [])]);
+
+      setRoutesToSend(prev => [
+        ...prev,
+        ...(storageData.routeToSend?.filter(r => r.latitude && r.longitude) || [])
+      ]);
+
       setDistance(storageData.distance || 0);
       setCalories(storageData.calories || 0);
 
       // Calcular tempo decorrido a partir da data de início
+      console.log(storageData.startRunDate);
+      
       if (storageData.startRunDate) {
         const startTime = new Date(storageData.startRunDate).getTime();
         const now = Date.now();
@@ -715,9 +711,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
   };
 
   useEffect(() => {
-    initializeLocation()
-   
-  
+    requestLocationForegroundPermissions()
+    verifyBackgroundLocationPermission()
     const subscription = AppState.addEventListener('change', handleAppStateChange);
   
     return () => {
@@ -725,10 +720,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     };
   }, []);
   
- /*  useFocusEffect(() =>{
-    initializeLocation()
-  })
- */
   return (
     <RunContext.Provider
       value={{
@@ -748,7 +739,10 @@ export const RunProvider = ({children}: RunProviderProps) => {
         handleCloseShowItems,
         spawnedBox,
         timer,
-        firstRouteCoordinates
+        firstRouteCoordinates,
+        locationForegroundPermissions,
+        startWatchingPosition,
+        locationSubscription
       }}>
       {children}
     </RunContext.Provider>

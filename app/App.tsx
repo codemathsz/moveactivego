@@ -20,7 +20,6 @@ import ActivitiesScreen from './activities';
 import { StatusBar } from 'react-native';
 import InventoryScreen from './inventory';
 import ItemScreen from './item';
-import * as Notifications from 'expo-notifications';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -140,19 +139,9 @@ function LoggedInDrawer() {
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-
   return (
     <NavigationContainer>
-      <SafeAreaProvider>
+{/*       <SafeAreaProvider> */}
         <SafeAreaView style={{ flex: 1 }}>
           <RootSiblingParent>
             <AuthProvider
@@ -173,7 +162,7 @@ function App() {
             </AuthProvider>
           </RootSiblingParent>
         </SafeAreaView>
-      </SafeAreaProvider>
+    {/*   </SafeAreaProvider> */}
     </NavigationContainer>
   );
 }
