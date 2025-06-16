@@ -1,27 +1,13 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, AppStateStatus, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import MapView, { Polyline, Region, Marker} from 'react-native-maps';
-import * as Location from "expo-location"
+import { useNavigation } from '@react-navigation/native';
+import React, {useEffect } from 'react';
+import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MapView, { Polyline, Marker} from 'react-native-maps';
 import { colors } from "@/constants/Screen";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { IRun, RunFinishDTO, useRun } from '../contexts/RunContext';
+import { useRun } from '../contexts/RunContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { formatDateToISO } from '@/utils';
 import CustomButton from './customButton';
 
-interface ILocation{
-  coords: {
-    latitude: number;
-    longitude: number;
-    altitude: number | null;
-    accuracy: number;
-    altitudeAccuracy: number | null;
-    heading: number | null;
-    speed: number | null;
-  };
-  timestamp: number;
-}
 const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, initialLocation?: any, skill?: any[] }) => {
   const { 
     location,
@@ -38,7 +24,8 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     firstRouteCoordinates,
     locationForegroundPermissions,
     startWatchingPosition,
-    locationSubscription
+    locationSubscription,
+    isLoadingLocation
   } = useRun()
   const { appVersion } = useAuth();
   
@@ -74,124 +61,132 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     
   },[locationForegroundPermissions])
 
+  if(isLoadingLocation){
     return (
-      <View style={styles.mapContainer}>
-        <Text style={styles.versionText}>{appVersion}</Text>
-        {showItems && (
-          <Modal transparent={true} visible={true} animationType="fade">
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContainer}>
-                <View style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10}}>
-                  <Text>Items resgatados!</Text>
-                  <TouchableOpacity onPress={() => handleCloseShowItems()}>
-                    <Text style={styles.closeButtonText}>✖</Text>
-                  </TouchableOpacity>
-                </View>
-                
-                {
-                  spawnedBoxItems?.map((item) =>{
-                    return (
-                      <View key={item.id}>
-                        <Image source={{ uri: item.picture }} style={styles.itemImage} />
-                        <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemRarity}>{item.rarity}</Text>
-                      </View>
-                    )
-                  })
-                }
-              </View>
-            </View>
-          </Modal>
-        )}
-        {location && locationForegroundPermissions?.granted ? (    
-          <MapView
-            style={[styles.map]}
-            ref={mapRef}
-            initialRegion={{
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              latitudeDelta: 0.005,
-              longitudeDelta: 0.005
-            }}
-            showsMyLocationButton
-          >
-            {
-              location && (
-                <Marker 
-                  coordinate={{
-                    latitude: location.coords.latitude,
-                    longitude: location.coords.longitude
-                  }}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                >
-                  <Image
-                    source={require('../assets/icons/run-icon.png')}
-                    style={{ width: 36, height: 36 }}
-                    resizeMode="contain"
-                  />
-                </Marker>
-              )
-            }
-            {
-              isRunning && firstRouteCoordinates && (
-                <Marker 
-                  coordinate={{
-                    latitude: firstRouteCoordinates.latitude,
-                    longitude: firstRouteCoordinates.longitude
-                  }}
-                />
-              )
-            }
-            {isRunning && routeCoordinates && (
-              <Polyline
-                coordinates={routeCoordinates?.map(route => ({
-                  latitude: route.latitude,
-                  longitude: route.longitude,
-                }))}
-                strokeColor="#FF0000" 
-                strokeWidth={3}
-              />
-            )}
-            {isRunning && spawnedBox && (
-              <Marker
-                coordinate={{
-                  latitude: spawnedBox?.latitude,
-                  longitude: spawnedBox?.longitude
-                }}
-                title="Recompensa!"
-                description="Pegue essa caixa de recompensa 🏆"
-                image={require('../assets/icons/move.png')}
-              />
-            )}
-          </MapView>
-        ) : (
-          <View style={{flex: 1, display: 'flex',justifyContent: 'center', alignItems: 'center', paddingLeft: 20}}>
-            <View>
-              <Text>Erro ao obter localização do usuário. Você precisa permitir que o aplicativo tenha acesso a localização.</Text>
-            </View>
-          </View>
-        )}
-
-        {!props.dashboard && (
-          <CustomButton 
-            onPress={() => toggleRun()} 
-            style={styles.buttonPause} 
-            loading={loading} 
-            icon={
-              <Ionicons name="pause" size={24} color="white" />
-            }
-          />
-
-        )}
-
-        {!props.card && (
-          <View style={styles.customButton}>
-            
-            <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
-          </View>
-        )}
+      <View>
+        <ActivityIndicator></ActivityIndicator>
       </View>
-    );
+    )
+  }
+
+  return (
+    <View style={styles.mapContainer}>
+      <Text style={styles.versionText}>{appVersion}</Text>
+      {showItems && (
+        <Modal transparent={true} visible={true} animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContainer}>
+              <View style={{display: 'flex', flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10}}>
+                <Text>Items resgatados!</Text>
+                <TouchableOpacity onPress={() => handleCloseShowItems()}>
+                  <Text style={styles.closeButtonText}>✖</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {
+                spawnedBoxItems?.map((item) =>{
+                  return (
+                    <View key={item.id}>
+                      <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemRarity}>{item.rarity}</Text>
+                    </View>
+                  )
+                })
+              }
+            </View>
+          </View>
+        </Modal>
+      )}
+      {location && locationForegroundPermissions?.granted ? (    
+        <MapView
+          style={[styles.map]}
+          ref={mapRef}
+          initialRegion={{
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005
+          }}
+          showsMyLocationButton
+        >
+          {
+            location && (
+              <Marker 
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude
+                }}
+                anchor={{ x: 0.5, y: 0.5 }}
+              >
+                <Image
+                  source={require('../assets/icons/run-icon.png')}
+                  style={{ width: 36, height: 36 }}
+                  resizeMode="contain"
+                />
+              </Marker>
+            )
+          }
+          {
+            isRunning && firstRouteCoordinates && (
+              <Marker 
+                coordinate={{
+                  latitude: firstRouteCoordinates.latitude,
+                  longitude: firstRouteCoordinates.longitude
+                }}
+              />
+            )
+          }
+          {isRunning && routeCoordinates && (
+            <Polyline
+              coordinates={routeCoordinates?.map(route => ({
+                latitude: route.latitude,
+                longitude: route.longitude,
+              }))}
+              strokeColor="#FF0000" 
+              strokeWidth={3}
+            />
+          )}
+          {isRunning && spawnedBox && (
+            <Marker
+              coordinate={{
+                latitude: spawnedBox?.latitude,
+                longitude: spawnedBox?.longitude
+              }}
+              title="Recompensa!"
+              description="Pegue essa caixa de recompensa 🏆"
+              image={require('../assets/icons/move.png')}
+            />
+          )}
+        </MapView>
+      ) : (
+        <View style={{flex: 1, display: 'flex',justifyContent: 'center', alignItems: 'center', paddingLeft: 20}}>
+          <View>
+            <Text>Erro ao obter localização do usuário. Você precisa permitir que o aplicativo tenha acesso a localização.</Text>
+          </View>
+        </View>
+      )}
+
+      {!props.dashboard && (
+        <CustomButton 
+          onPress={() => toggleRun()} 
+          style={styles.buttonPause} 
+          loading={loading} 
+          icon={
+            <Ionicons name="pause" size={24} color="white" />
+          }
+        />
+
+      )}
+
+      {!props.card && (
+        <View style={styles.customButton}>
+          
+          <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
+        </View>
+      )}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({

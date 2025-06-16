@@ -52,6 +52,7 @@ export interface RunContextType {
   locationForegroundPermissions: LocationPermissionResponse | null
   startWatchingPosition: () => void,
   locationSubscription: LocationSubscription | null
+  isLoadingLocation: boolean
 }
 
 export type RoutesType ={
@@ -188,6 +189,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const isRunningRef = useRef(isRunning);
   const appState = useRef(AppState.currentState);
   const [locationForegroundPermissions, requestLocationForegroundPermissions] = useForegroundPermissions()
+  const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(true)
 
   const fetchCity = async (latitude: number, longitude: number): Promise<string> => {
     try {
@@ -484,7 +486,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
           }
         }
       }
-    ).then((response) => locationSubscription = response);
+    ).then((response) => locationSubscription = response)
+    .finally(() => setIsLoadingLocation(false));
   };
 
   const openBox = async (jwt: string, boxId: number) =>{
@@ -691,7 +694,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
         isRunningRef.current = isRunning;
       } else {
         await AsyncStorage.removeItem('isRunningAsyncStorage');
-        clearRun()
         setIsRunning(false);
         isRunningRef.current = isRunning;
       }
@@ -742,7 +744,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
         firstRouteCoordinates,
         locationForegroundPermissions,
         startWatchingPosition,
-        locationSubscription
+        locationSubscription,
+        isLoadingLocation
       }}>
       {children}
     </RunContext.Provider>
