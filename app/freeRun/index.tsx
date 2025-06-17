@@ -10,6 +10,7 @@ import { RoutesType, useRun } from '../../contexts/RunContext';
 import { colors } from '../../constants/Screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
+import polyline from '@mapbox/polyline';
 
 interface RouteParamsStart {
   avg_speed: string
@@ -25,6 +26,7 @@ const FreeRun = () => {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [routeToRender, setRouteToRender] = useState<RoutesType[]>([]);
   const viewRef = useRef(null);
   const mapRef = useRef<MapView>(null);
   const [image, setImage] = useState('');
@@ -50,6 +52,9 @@ const FreeRun = () => {
   const routeCoordinates = allRoutes?.map(coord => ({
     latitude: coord.latitude,
     longitude: coord.longitude,
+    speed: coord.speed,
+    distance: coord.distance,
+    timestamp: coord.timestamp
   }));
 
   const onShare = async () => {
@@ -83,6 +88,58 @@ const FreeRun = () => {
       setShowInfoPrint(false);
     }
   };
+
+  function sampleWaypoints(points: RoutesType[], maxWaypoints = 23): RoutesType[] {
+    if (points.length <= maxWaypoints) {
+      return points;
+    }
+
+    const step = Math.floor(points.length / maxWaypoints);
+    const sampled = [];
+
+    for (let i = 0; i < points.length; i += step) {
+      sampled.push(points[i]);
+    }
+
+    return sampled;
+  }
+
+  async function getRoutesWithAPIGoogle(origin: RoutesType, destination: RoutesType, waypoints:RoutesType[] = [],fallbackRoute: RoutesType[]) {
+    try {
+
+      const waypointsStr = waypoints.length
+      ? `&waypoints=${waypoints.map(p => `${p.latitude},${p.longitude}`).join('|')}`
+      : '';
+  
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}${waypointsStr}&key=AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY`
+      );
+  
+      const data = await response.json();
+      console.log("DATA RUN FREE: ",data);
+      if(data.status === 'OK'){
+        const points = polyline.decode(data.routes[0].overview_polyline.points);
+  
+        const routeCoords = points.map(([lat, lng]) => ({
+          latitude: lat,
+          longitude: lng,
+          speed: 0, 
+          distance: 0, 
+          timestamp: new Date().toISOString(),
+        }));
+  
+        setRouteToRender(routeCoords);
+      }else{
+        console.warn("Error fetching route", data);
+        setRouteToRender(fallbackRoute);
+      }
+    } catch (error) {
+      console.error('Error fetching Google route', error);
+      setRouteToRender(fallbackRoute);
+    }
+  }
+
+  
 
 
   const renderMarkers = () => {
@@ -121,11 +178,35 @@ const FreeRun = () => {
   }
 
   useEffect(() =>{
-    mapRef.current?.animateCamera({
-      zoom: 20
-    });
+    if(routeCoordinates?.length > 1){
+      const allWaypoints = routeCoordinates.slice(1, -1);
+      const sampledWaypoints = sampleWaypoints(allWaypoints, 20);
 
-  },[])
+      getRoutesWithAPIGoogle(
+        routeCoordinates[0], 
+        routeCoordinates[routeCoordinates.length -1], 
+        sampledWaypoints,
+        routeCoordinates
+      )
+    }
+  },[allRoutes])
+
+  useEffect(() =>{
+    if (!routeCoordinates || routeCoordinates.length < 2) return;
+
+    const start = routeCoordinates[0];
+    const end = routeCoordinates[routeCoordinates.length - 1];
+
+    const center = {
+      latitude: (start.latitude + end.latitude) / 2,
+      longitude: (start.longitude + end.longitude) / 2,
+    };
+
+    mapRef.current?.animateCamera({
+      zoom: 16,
+      center,
+    });
+  },[routeCoordinates])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -151,10 +232,7 @@ const FreeRun = () => {
             ref={mapRef}
           >
             <Polyline
-              coordinates={routeCoordinates?.map((route: { latitude: any; longitude: any; }) => ({
-                latitude: route.latitude,
-                longitude: route.longitude,
-              }))}
+              coordinates={routeToRender}
               strokeColor="#FF0000" 
               strokeWidth={3}
             />
