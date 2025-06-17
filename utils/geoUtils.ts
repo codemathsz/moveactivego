@@ -8,7 +8,7 @@ export const calculateDistance = (
     lat2: number,
     lon2: number,
   ): number => {
-    const earthRadius = 6371;
+    const earthRadius = 6371000; // in meters
     const dLat = toRadians(lat2 - lat1);
     const dLon = toRadians(lon2 - lon1);
     const a =

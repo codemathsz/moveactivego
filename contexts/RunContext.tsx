@@ -213,11 +213,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
     }
   };
 
-
-  const initializeLocation = async () => {
-    
-  };
-
   const clearRun = async () => {
     setDistance(0);
     setCalories(0);
@@ -333,46 +328,84 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if(!jwt) return
     setStopingRun(true)
     setLoading(true)
+
     let routes = routesToSend.filter(r => r && r.latitude && r.longitude);
-    const lastCoord = routeCoordinates[routeCoordinates.length - 1] ?? routeCoordinates[0];
-    if (lastCoord?.latitude && lastCoord?.longitude) {
-      routes.push(lastCoord);
-    }
-    console.log("STOP RUN ", routes);
-    
-    let finishRunDTO: RunFinishDTO = {
-      end_date: formatDateToISO(new Date()),
-      calories: calories!,
-      routes: routes
-    }
-    const response = await finishRun(jwt, run?.id!,finishRunDTO)
-    
-    if(response.success){
-      await AsyncStorage.removeItem('@runData');
-      clearRun()
-      
-      startWatchingPosition()
-      setIsRunning(false);
-      setLoading(false)
-      setFirstRouteCoordinates(null)
-      /* await Notifications.cancelAllScheduledNotificationsAsync();
-      await Notifications.dismissAllNotificationsAsync(); */
-
-      navigation.navigate('freeRun', { 
-        distance: response?.data?.run?.distance ?? 0, 
-        calories: response?.data?.run?.calories ?? 0,
-        duration: response?.data?.run?.duration ?? 0,              
-        max_speed: response?.data?.run?.max_speed ?? 0,
-        min_speed: response?.data?.run?.min_speed ?? 0,
-        avg_speed: response?.data?.run?.avg_speed ?? 0,
-        allRoutes: response?.data?.run?.routes ?? [],
-        firstRouteCoordinates: response?.data?.run?.routes[0] ?? [],
-        lastRouteCoordinates: response?.data?.run?.routes[response?.routes?.length - 1] ?? []
+  
+    try {
+      const currentLocation = await getCurrentPositionAsync({
+        accuracy: Accuracy.Highest,
       });
-    }
+      console.log("currentLocation: ",currentLocation);
+      console.log("routes: ",routes);
 
-    setLoading(false)
-    setStopingRun(false)
+      
+      const currentCoord = {
+        latitude: currentLocation.coords.latitude,
+        longitude: currentLocation.coords.longitude,
+        speed: currentLocation.coords?.speed! > 0 ? Number(currentLocation.coords.speed) : 0,
+        timestamp: formatDateToISO(currentLocation.timestamp),
+        distance: routes?.length > 0 ? calculateDistance(
+          currentLocation.coords.latitude, 
+          currentLocation.coords.longitude,
+          routes[routes.length - 1].latitude,
+          routes[routes.length - 1].longitude
+        ) : 0
+      };
+
+      const lastInRoutes = routes[routes.length - 1];
+
+      const isSameLocation = (a: typeof currentCoord, b: typeof currentCoord, threshold = 0.00005) => {
+        if (!b) return false;
+        return (
+          Math.abs(a.latitude - b.latitude) < threshold &&
+          Math.abs(a.longitude - b.longitude) < threshold
+        );
+      };
+
+      const isAlreadyInRoutes = isSameLocation(currentCoord, lastInRoutes);
+
+      if (!isAlreadyInRoutes) {
+        routes.push(currentCoord);
+      }
+      
+      let finishRunDTO: RunFinishDTO = {
+        end_date: formatDateToISO(new Date()),
+        calories: calories!,
+        routes: routes
+      }
+      const response = await finishRun(jwt, run?.id!,finishRunDTO)
+      
+      if(response.success){
+        await AsyncStorage.removeItem('isRunningAsyncStorage');
+        clearRun()
+        
+        startWatchingPosition()
+        setIsRunning(false);
+        setLoading(false)
+        setFirstRouteCoordinates(null)
+
+        navigation.navigate('freeRun', { 
+          distance: response?.data?.run?.distance ?? 0, 
+          calories: response?.data?.run?.calories ?? 0,
+          duration: response?.data?.run?.duration ?? 0,              
+          max_speed: response?.data?.run?.max_speed ?? 0,
+          min_speed: response?.data?.run?.min_speed ?? 0,
+          avg_speed: response?.data?.run?.avg_speed ?? 0,
+          allRoutes: response?.data?.run?.routes ?? [],
+          firstRouteCoordinates: response?.data?.run?.routes[0] ?? [],
+          lastRouteCoordinates: response?.data?.run?.routes[response?.routes?.length - 1] ?? []
+        });
+      }
+
+      setLoading(false)
+      setStopingRun(false)
+      
+    } catch (error) {
+      console.log('Erro ao pegar localização final:', error);
+    } finally{
+      setLoading(false)
+      setStopingRun(false)
+    }
   };
 
   const handleUpdateRun = async (jwt: string, runId: any,dto: RunUpdateDTO) =>{
@@ -396,9 +429,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
       },
       async (location) => {
         const { coords, timestamp } = location;
-        console.log("WATCH: ", location);
-        
         setLocation(location as ILocation);
+
         if (isRunningRef.current && !stopingRun) {
           mapRef.current!.animateCamera({
             center: {
@@ -409,14 +441,16 @@ export const RunProvider = ({children}: RunProviderProps) => {
             heading: coords.heading || 0,
             zoom: 70,
           }, { duration: 1000 });
-          let distance = lastRouteCoordinates
+
+          const lastCoord = routeCoordinates[routeCoordinates.length - 1];
+          let distance = lastCoord
             ? calculateDistance(
-                lastRouteCoordinates?.latitude,
-                lastRouteCoordinates?.longitude,
+                lastCoord?.latitude,
+                lastCoord?.longitude,
                 coords.latitude,
                 coords.longitude
               )
-            : 0;
+          : 0;
 
 
           if(spawnedBox ){
@@ -426,7 +460,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
               coords.longitude,
               spawnedBox?.latitude,
               spawnedBox?.longitude
-            ) * 1000
+            )
             
             if(distanceInMetersFromBox <= 30 && jwt && hasOpeningBox){
               await openBox(jwt, spawnedBox.box_id)
@@ -447,7 +481,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
             },
           ]);
 
-          if (Number(accumulatedDistance.toFixed(2)) >= 0.02) {
+          if (accumulatedDistance >= 20) {
             accumulatedDistance = 0;
             setRoutesToSend((prevRoutes) => [
               ...(prevRoutes || []),
@@ -462,19 +496,10 @@ export const RunProvider = ({children}: RunProviderProps) => {
           }
 
           runSpeed = Number(coords.speed);
-          if (
-            routeCoordinates[routeCoordinates.length - 1]?.latitude !== 0 &&
-            routeCoordinates[routeCoordinates.length - 1]?.longitude !== 0
-          ) {
-            setDistance((d) => (d += distance));
+          if (lastCoord) {
+            setDistance((d) => d + distance);
             let timeToCaloriesCalc =
-              (timestamp - (lastRouteCoordinates?.timestamp ?? 0)) / 60000;
-
-            lastRouteCoordinates = {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              timestamp: timestamp,
-            };
+              (timestamp - (new Date(lastCoord.timestamp).getTime() ?? 0)) / 60000;
 
             if (distance > minDistance && runSpeed > 0 && runSpeed <= 13) {
               let MET = 1 + 1.7145 * runSpeed;
@@ -658,12 +683,9 @@ export const RunProvider = ({children}: RunProviderProps) => {
     if (prevAppState.match(/inactive|background/) && nextAppState === 'active') {
       const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
       const { isRunning } = JSON.parse(isRunningData || '{}');
+      console.log("IS RUNNING: ", isRunning);
       
       const storageData = await getStorageLocation();
-      
-      // Popular estado com dados da corrida
-      console.log("storageData.routes", storageData.routes);
-      console.log("storageData.routeToSend ", storageData.routeToSend );
 
       
       setRouteCoordinates(prev => [...prev, ...(storageData.routes || [])]);
@@ -675,9 +697,6 @@ export const RunProvider = ({children}: RunProviderProps) => {
 
       setDistance(storageData.distance || 0);
       setCalories(storageData.calories || 0);
-
-      // Calcular tempo decorrido a partir da data de início
-      console.log(storageData.startRunDate);
       
       if (storageData.startRunDate) {
         const startTime = new Date(storageData.startRunDate).getTime();
@@ -690,12 +709,12 @@ export const RunProvider = ({children}: RunProviderProps) => {
         setIsRunning(false);
         setTimeout(() => {
           setIsRunning(true);
-        }, 100); // espera um pouco e ativa novamente
+        }, 500); // espera um pouco e ativa novamente
         isRunningRef.current = isRunning;
       } else {
         await AsyncStorage.removeItem('isRunningAsyncStorage');
         setIsRunning(false);
-        isRunningRef.current = isRunning;
+        isRunningRef.current = false;
       }
     }
 

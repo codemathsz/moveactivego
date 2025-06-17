@@ -36,7 +36,7 @@ const RunBar = ({time}: any) => {
       }
 
       const hours = timer / 3600;
-      const currentSpeed = distance / hours;
+      const currentSpeed = (distance / 1000) / hours;
       setSpeed(Number(currentSpeed.toFixed(2)));
     }, 1000);
 
@@ -117,7 +117,7 @@ const RunBar = ({time}: any) => {
 
         <View style={styles.infoCard}>
           <View style={styles.statsArray}>
-            <RunStat image={require('../assets/icons/ongoing-run-distance-icon.png')} value={distance.toFixed(2) + ' Km' || '0 km'} label="Distância" />
+            <RunStat image={require('../assets/icons/ongoing-run-distance-icon.png')} value={(distance / 1000).toFixed(2) + ' Km' || '0 km'} label="Distância" />
             <RunStat image={require('../assets/icons/ongoing-run-duration-icon.png')} value={formattedTimer} label="Duração" />
             <RunStat image={require('../assets/icons/ongoing-run-calories-icon.png')} value={calories?.toFixed(0) || 0} label="Calorias" />
           </View>

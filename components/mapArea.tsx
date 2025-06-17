@@ -7,6 +7,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRun } from '../contexts/RunContext';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomButton from './customButton';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, initialLocation?: any, skill?: any[] }) => {
   const { 
@@ -31,8 +32,6 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
   
   const navigation = useNavigation<any>();
 
-
-
   const toggleRun = async () => {
     if(isRunning){
       if(props.dashboard){
@@ -46,8 +45,15 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
   };
 
   useEffect(() =>{
-   console.log("LOCATION: ",location );
-   
+    if(location){
+      mapRef.current?.animateCamera({
+        center: {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        zoom: 60,
+      });
+    }
   },[location])
 
   useEffect(() =>{
@@ -60,6 +66,17 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     return () => locationSubscription?.remove()
     
   },[locationForegroundPermissions])
+
+  useEffect(() =>{
+    (async () =>{
+      const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
+      const { isRunning } = JSON.parse(isRunningData || '{}');
+
+      if(isRunning){
+        return navigation.navigate('Run' as never);
+      }
+    })
+  },[])
 
   if(isLoadingLocation){
     return (
