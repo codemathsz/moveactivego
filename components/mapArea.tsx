@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
-import React, {useEffect } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, {useCallback, useEffect } from 'react';
 import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Polyline, Marker} from 'react-native-maps';
 import { colors } from "@/constants/Screen";
@@ -26,7 +26,8 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     locationForegroundPermissions,
     startWatchingPosition,
     locationSubscription,
-    isLoadingLocation
+    isLoadingLocation,
+    initializeLocation
   } = useRun()
   const { appVersion } = useAuth();
   
@@ -34,7 +35,11 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
 
   const toggleRun = async () => {
     if(isRunning){
+      console.log("AQQQ");
+      
       if(props.dashboard){
+      console.log("AQQQ D");
+
         return navigation.navigate('Run' as never);
       }
       
@@ -71,12 +76,17 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     (async () =>{
       const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
       const { isRunning } = JSON.parse(isRunningData || '{}');
-
       if(isRunning){
         return navigation.navigate('Run' as never);
       }
     })
   },[])
+
+  useFocusEffect(
+    useCallback(() => {
+      initializeLocation()
+    }, [])
+  );
 
   if(isLoadingLocation){
     return (

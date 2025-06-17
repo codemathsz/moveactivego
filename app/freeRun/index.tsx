@@ -41,11 +41,6 @@ const FreeRun = () => {
   const { allRoutes }: RouteParamsStart = route.params as any || [{}];
   const [showInfoPrint, setShowInfoPrint] = useState(false);
   const { appVersion } = useAuth();
-  
-  const exampleRoute = [
-    { latitude: Number(firstRouteCoordinates?.latitude || 0), longitude: Number(firstRouteCoordinates?.longitude || 0) },
-    { latitude: Number(lastRouteCoordinates?.latitude || 0), longitude: Number(lastRouteCoordinates?.longitude || 0) },
-  ];
 
 
 

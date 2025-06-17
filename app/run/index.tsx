@@ -24,25 +24,6 @@ interface RouteParamsLocation {
 
 const RunScreen = () => {
 
-  const [distance, setDistance] = useState(0);
-  let distanceInfo = (info: any) => {
-    setDistance(info);
-  };
-  const [speed, setSpeed] = useState(0);
-  let speedInfo = (info: any) => {
-    setSpeed(info);
-  };
-
-  const [calories, setCalories] = useState(0);
-  let caloriesInfo = (info: any) => {
-    setCalories(info);
-  };
-
-  const [time, setTime] = useState(0);
-  let timeInfo = (info: any) => {
-    setTime(info);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.statsBar}>

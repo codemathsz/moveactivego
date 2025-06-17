@@ -53,6 +53,7 @@ export interface RunContextType {
   startWatchingPosition: () => void,
   locationSubscription: LocationSubscription | null
   isLoadingLocation: boolean
+  initializeLocation: () => void
 }
 
 export type RoutesType ={
@@ -211,6 +212,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
       console.error('Erro ao buscar cidade:', error);
       return 'Cidade não encontrada';
     }
+  };
+
+  const initializeLocation = async () => {
+   
+    let userLocation = await getCurrentPositionAsync({})
+
+    setLocation(userLocation as ILocation)
   };
 
   const clearRun = async () => {
@@ -423,12 +431,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const startWatchingPosition = async () => {
     watchPositionAsync(
       {
-        accuracy: Accuracy.High,
+        accuracy: Accuracy.BestForNavigation,
         timeInterval: 1000,
-        distanceInterval: 5,
+        distanceInterval: 1
       },
       async (location) => {
         const { coords, timestamp } = location;
+      
         setLocation(location as ILocation);
 
         if (isRunningRef.current && !stopingRun) {
@@ -441,17 +450,18 @@ export const RunProvider = ({children}: RunProviderProps) => {
             heading: coords.heading || 0,
             zoom: 70,
           }, { duration: 1000 });
+          
 
-          const lastCoord = routeCoordinates[routeCoordinates.length - 1];
-          let distance = lastCoord
-            ? calculateDistance(
-                lastCoord?.latitude,
-                lastCoord?.longitude,
-                coords.latitude,
-                coords.longitude
-              )
+          const distance = lastRouteCoordinates
+          ? calculateDistance(
+              lastRouteCoordinates.latitude,
+              lastRouteCoordinates.longitude,
+              coords.latitude,
+              coords.longitude
+            )
           : 0;
 
+          console.log("DIS", distance);
 
           if(spawnedBox ){
             
@@ -460,7 +470,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
               coords.longitude,
               spawnedBox?.latitude,
               spawnedBox?.longitude
-            )
+            ) * 1000
             
             if(distanceInMetersFromBox <= 30 && jwt && hasOpeningBox){
               await openBox(jwt, spawnedBox.box_id)
@@ -481,7 +491,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
             },
           ]);
 
-          if (accumulatedDistance >= 20) {
+          if (Number(accumulatedDistance.toFixed(2)) >= 0.02) {
             accumulatedDistance = 0;
             setRoutesToSend((prevRoutes) => [
               ...(prevRoutes || []),
@@ -496,16 +506,27 @@ export const RunProvider = ({children}: RunProviderProps) => {
           }
 
           runSpeed = Number(coords.speed);
-          if (lastCoord) {
-            setDistance((d) => d + distance);
+          if (
+            routeCoordinates[routeCoordinates.length - 1]?.latitude !== 0 &&
+            routeCoordinates[routeCoordinates.length - 1]?.longitude !== 0
+          ) {
+            
             let timeToCaloriesCalc =
-              (timestamp - (new Date(lastCoord.timestamp).getTime() ?? 0)) / 60000;
+              (timestamp - (lastRouteCoordinates?.timestamp ?? 0)) / 60000;
+
+            lastRouteCoordinates = {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              timestamp: timestamp,
+            };
 
             if (distance > minDistance && runSpeed > 0 && runSpeed <= 13) {
+              setDistance((prev) => prev + distance);
               let MET = 1 + 1.7145 * runSpeed;
               let calories =
                 ((MET * 3.5 * (user?.weight ?? 75)) / 200) * timeToCaloriesCalc;
-
+              console.log("CALORIES: ",calories);
+              
               setCalories((prevCalories) => prevCalories + calories);
             }
           }
@@ -695,7 +716,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
         ...(storageData.routeToSend?.filter(r => r.latitude && r.longitude) || [])
       ]);
 
-      setDistance(storageData.distance || 0);
+      setDistance((prev) => prev + (storageData.distance || 0));
+
       setCalories(storageData.calories || 0);
       
       if (storageData.startRunDate) {
@@ -764,7 +786,8 @@ export const RunProvider = ({children}: RunProviderProps) => {
         locationForegroundPermissions,
         startWatchingPosition,
         locationSubscription,
-        isLoadingLocation
+        isLoadingLocation,
+        initializeLocation
       }}>
       {children}
     </RunContext.Provider>
