@@ -20,6 +20,7 @@ import { UserInventoryUpdateInterface } from '../interfaces/user-inventory-updat
 import { UserVerifyEmailWithCode } from '../interfaces/user-verify-email';
 import { IRun, RunFinishDTO, RunUpdateDTO } from '@/contexts/RunContext';
 import { Alert } from 'react-native';
+import { sendLogGrafana } from './grafana.api';
 
 export const register = async (user: UserRegister) => {
   try {
@@ -187,7 +188,7 @@ export const postRun = async (token: string, dto: IRun): Promise<{ success: bool
   }catch (error:any) {
     if (error.response && error.response.data) {
       console.log(error.response.data);
-      
+      await sendLogGrafana('START_RUN: '+  error)
       return error.response.data
     } else {
       console.error("Unexpected error: ", error);
@@ -220,6 +221,7 @@ export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) 
     return response.data;
   } catch (error: any) {
     console.log(error);
+    await sendLogGrafana('STOP_RUN: '+  error)
     Alert.alert(
       "Erro",
       JSON.stringify(error.response.data, null, 2) // Adiciona espaçamento para formatar o JSON

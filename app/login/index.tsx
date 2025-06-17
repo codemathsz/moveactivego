@@ -40,7 +40,7 @@ const LoginScreen = () => {
 
   const handleLoginPress = async () => {
     setLoading(true)
-    const response = await login({ email, password })
+    const response = await login({ email, password }).finally(() => setLoading(false))
     if(response){
       console.log(response);
       if(response === "Email não verificado. Por favor, verifique seu email antes de fazer login."){

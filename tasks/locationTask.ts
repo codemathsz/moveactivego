@@ -3,12 +3,12 @@ import * as TaskManager from 'expo-task-manager';
 import {
   startLocationUpdatesAsync,
   hasStartedLocationUpdatesAsync,
-  Accuracy,
   stopLocationUpdatesAsync,
 } from 'expo-location';
 import { getStorageLocation, saveStorageLocation } from '@/libs/asyncStorage/locationStorage';
 import { calculateDistance } from '@/utils/geoUtils';
 import { formatDateToISO } from '@/utils';
+import { sendLogGrafana } from '@/apis/grafana.api';
 
 export const BACKGROUND_LOCATION_TASK = 'location-tracking';
 let accumulatedDistance = 0
@@ -64,6 +64,7 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) =>
       await saveStorageLocation(currentRouteCordinates)
     }
   } catch (error) {
+    await sendLogGrafana('TASK_MANAGER: '+ JSON.stringify(error))
     console.log(error)
     stopLocationTask();
   }
@@ -73,6 +74,7 @@ TaskManager.defineTask(BACKGROUND_LOCATION_TASK, async ({ data, error }: any) =>
 
 export async function startLocationTask() {
   try {    
+    /* throw new Error('Erro proposital para teste'); */
     const hasStarted = await hasStartedLocationUpdatesAsync(BACKGROUND_LOCATION_TASK)
     if(hasStarted){
       await stopLocationTask()
@@ -81,7 +83,9 @@ export async function startLocationTask() {
       distanceInterval: 1,
       timeInterval: 1000
     });
+    sendLogGrafana('START_LOCATION_TASK')
   } catch (error) {
+    await sendLogGrafana('START_LOCATION_TASK: '+  JSON.stringify(error))
     console.log(error);
   }
 }
@@ -93,7 +97,9 @@ export async function stopLocationTask() {
     if(hasStarted){
       await stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK)
     }
+    await sendLogGrafana('STOP_LOCATION_TASK')
   } catch (error) {
+    await sendLogGrafana('STOP_LOCATION_TASK: '+  JSON.stringify(error))
     console.log(error);
   }
 }
