@@ -1,6 +1,6 @@
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
@@ -17,11 +17,12 @@ import Sidebar from '@/components/sidebar';
 import VerificationScreen from './verification';
 import ProfileScreen from './profile';
 import ActivitiesScreen from './activities';
-import { StatusBar } from 'react-native';
+import { Alert, StatusBar } from 'react-native';
 import InventoryScreen from './inventory';
 import ItemScreen from './item';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgroundRestrictions';
 
 const RootStack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -138,6 +139,22 @@ function LoggedInDrawer() {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  async function checkRestritions() {
+    const restriction = await checkBackgroundRestrictions()
+
+    if(restriction){
+        Alert.alert(
+        restriction.title,
+        restriction.description,
+        [{ text: 'OK' }]
+      );
+    }
+  }
+
+  useEffect(() =>{
+    checkRestritions()
+  },[])
 
   return (
     <NavigationContainer>

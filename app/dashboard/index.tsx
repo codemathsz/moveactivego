@@ -7,6 +7,8 @@ import { AppRegistry, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapArea from "@/components/mapArea";
 import { useNavigation } from "@react-navigation/native";
+
+
 interface ILocation{
   coords: {
     latitude: number;
@@ -23,6 +25,8 @@ interface ILocation{
 
 const DashboardScreen = () =>{
   const navigation = useNavigation<any>();
+
+
 
   return (
     <SafeAreaView style={styles.container}>
