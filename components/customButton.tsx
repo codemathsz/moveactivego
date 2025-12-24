@@ -9,7 +9,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { colors } from '../constants/Screen';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BLACK, PRIMARY_GREEN, SECONDARY_GREEN, WHITE } from '../constants/Colors';
 
 interface CustomButtonProps {
   title?: string;
@@ -37,7 +38,7 @@ const CustomButton = ({
 
   const buttonStyles = [
     styles.button,
-    type === 'secondary' ? styles.secondaryButton : styles.primaryButton,
+    type === 'secondary' && styles.secondaryButton,
     !title && styles.iconOnlyButton, 
     style,
   ];
@@ -48,11 +49,10 @@ const CustomButton = ({
     textStyle,
   ];
 
-
-  return (
-    <TouchableOpacity onPress={onPress} style={buttonStyles} disabled={loading}>
+  const buttonContent = (
+    <>
       {loading ? (
-        <ActivityIndicator size="small" color={spinnerColor || styles.primaryText.color} />
+        <ActivityIndicator size="small" color={spinnerColor || WHITE} />
       ) : (
         title ? (
           <View style={[styles.buttonContent, styleView]}>
@@ -63,31 +63,47 @@ const CustomButton = ({
           <View>
             {icon}
           </View>
-
         )
       )}
+    </>
+  );
+
+  if (type === 'primary') {
+    return (
+      <TouchableOpacity onPress={onPress} style={[style]} disabled={loading}>
+        <LinearGradient
+          colors={[SECONDARY_GREEN, PRIMARY_GREEN]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.button]}
+        >
+          {buttonContent}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <TouchableOpacity onPress={onPress} style={buttonStyles} disabled={loading}>
+      {buttonContent}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   iconOnlyButton: {
-    padding: 0, // remove padding pra não deslocar o ícone
+    padding: 0,
   },
-  
   button: {
-    padding: 16,
-    borderRadius: 8,
+    padding: 8,
+    borderRadius:   18,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   },
-  primaryButton: {
-    backgroundColor: colors.primary,
-  },
   secondaryButton: {
-    backgroundColor: 'white',
-    borderColor: colors.primary,
+    backgroundColor: 'transparent',
+    borderColor: PRIMARY_GREEN,
     borderWidth: 1,
   },
   buttonContent: {
@@ -95,16 +111,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    fontWeight: '600',
+    fontSize: 20,
     lineHeight: 24,
-    letterSpacing: 1.4,
   },
   primaryText: {
-    color: '#FFFFFF',
+    color: WHITE,
   },
   secondaryText: {
-    color: '#000000',
+    color: BLACK,
   },
 });
 

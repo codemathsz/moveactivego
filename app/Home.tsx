@@ -15,59 +15,72 @@ const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ImageBackground
-        source={require('../assets/images/HomeBackground.png')}
-        style={styles.backgroundImage}
-      />
+    <ImageBackground
+      source={require('../assets/images/HomeBackground.png')}
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logo}>move</Text>
+        </View>
 
-      <View style={styles.buttonsContainer}>
-        <Text style={styles.tagline}>Leve sua motivação para o próximo nível.</Text>
+        <View style={styles.contentContainer}>
+          <Text style={styles.tagline}>
+            A move vai te mostrar{'\n'}que você pode tudo!
+          </Text>
 
-        <CustomButton
-          title="Crie sua conta"
-          onPress={handleRegisterPress}
-          textStyle={{ textAlign: 'left', alignItems: 'center' }}
-          styleView={{ flex: 1, justifyContent: 'flex-start', paddingHorizontal: 8 }}
-          type="primary"
-        />
-
-        <CustomButton
-          title="Já tem uma conta? Entre!"
-          onPress={handleLoginPress}
-          textStyle={{ textAlign: 'left', alignItems: 'center' }}
-          styleView={{ flex: 1, justifyContent: 'flex-start', paddingHorizontal: 8 }}
-          type="secondary"
-        />
-      </View>
-
-    </SafeAreaView>
+          <View style={styles.buttonsContainer}>
+            <CustomButton
+              title="Começar"
+              onPress={handleRegisterPress}
+              styleView={{ padding: 8}}
+              type="primary"
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    width: '100%',
+    height: '100%',
   },
-  backgroundImage: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  logoContainer: {
+    paddingTop: 60,
+    alignItems: 'center',
+  },
+  logo: {
+    fontSize: 48,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontStyle: 'italic',
+  },
+  contentContainer: {
     paddingHorizontal: 20,
     paddingBottom: 50,
   },
-  buttonsContainer: {
-    fontFamily: 'Poppins-Regular',
-    width: '100%',
-    paddingHorizontal: 20,
-    marginVertical: 48,
-    gap: 16
-  },
   tagline: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Regular',
-    color: '#000',
-    textAlign: 'left',
+    fontSize: 24,
+    fontFamily: 'Poppins-Bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 32,
+    fontWeight: 'bold',
+  },
+  buttonsContainer: {
+    width: '100%',
+    gap: 16,
   },
 });
 
