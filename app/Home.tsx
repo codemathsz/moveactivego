@@ -1,14 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import CustomButton from '../components/customButton';
 
 const HomeScreen = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const navigation = useNavigation<any>();
-  const handleRegisterPress = () => {
-    navigation.navigate('Register');
-  };
 
   const handleLoginPress = () => {
     navigation.navigate('Login');
@@ -22,18 +19,21 @@ const HomeScreen = () => {
     >
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logo}>move</Text>
+          <Image
+            source={require('../assets/images/logo-white.png')}
+            resizeMode="contain"
+          />
         </View>
 
         <View style={styles.contentContainer}>
           <Text style={styles.tagline}>
-            A move vai te mostrar{'\n'}que você pode tudo!
+            A move vai te mostrar que você pode tudo!
           </Text>
 
           <View style={styles.buttonsContainer}>
             <CustomButton
               title="Começar"
-              onPress={handleRegisterPress}
+              onPress={handleLoginPress}
               styleView={{ padding: 8}}
               type="primary"
             />
@@ -53,9 +53,10 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     justifyContent: 'space-between',
+    paddingVertical: 24,
   },
   logoContainer: {
-    paddingTop: 60,
+    paddingTop: 40,
     alignItems: 'center',
   },
   logo: {
@@ -70,12 +71,12 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   tagline: {
-    fontSize: 24,
+    fontSize: 48,
     fontFamily: 'Poppins-Bold',
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 40,
-    lineHeight: 32,
+    lineHeight: 43,
     fontWeight: 'bold',
   },
   buttonsContainer: {
