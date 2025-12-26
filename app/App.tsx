@@ -41,12 +41,12 @@ function HomeStack() {
       <RootStack.Screen
         name="Register"
         component={RegisterScreen}
-        options={{ ...screens.withHeader } as any}
+        options={{ ...screens.withoutHeader } as any}
       />
       <RootStack.Screen
         name="Login"
         component={LoginScreen}
-        options={{ ...screens.withHeader } as any}
+        options={{ ...screens.withoutHeader } as any}
       />
       <RootStack.Screen
         name="Recuperar senha"
@@ -158,7 +158,7 @@ function App() {
 
   return (
     <NavigationContainer>
-{/*       <SafeAreaProvider> */}
+      {isLoggedIn ? (
         <SafeAreaView style={{ flex: 1 }}>
           <RootSiblingParent>
             <AuthProvider
@@ -166,20 +166,21 @@ function App() {
               setIsLoggedIn={(value: any) => {
                 setIsLoggedIn(value);
               }}>
-              <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-              {isLoggedIn ? (
+                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
                 <RunProvider>
                   <ProfileProvider>
                     <LoggedInDrawer />
                   </ProfileProvider>
                 </RunProvider>
-              ) : (
-                <HomeStack />
-              )}
             </AuthProvider>
           </RootSiblingParent>
         </SafeAreaView>
-    {/*   </SafeAreaProvider> */}
+      ) : (
+        <SafeAreaView style={{ flex: 1 }} edges={[]}>
+          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+          <HomeStack />
+        </SafeAreaView>
+      )}
     </NavigationContainer>
   );
 }
