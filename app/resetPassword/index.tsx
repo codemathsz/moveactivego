@@ -18,6 +18,7 @@ import { ResetPasswordConfirmation } from "../../interfaces/reset-password-confi
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
 import Toast from "react-native-root-toast";
 import { useNavigation } from "@react-navigation/native";
+import CustomButton from "@/components/customButton";
 
 const ResetPassword = () =>{
   const navigation = useNavigation<any>()
@@ -99,75 +100,80 @@ const ResetPassword = () =>{
     >
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.root}>
-          {sendEmail ? (
-            <Text>
-              <Text style={styles.title}>
-                <Text>Enviamos um código de verificação para o e-mail </Text>
-                <Text style={{ color: colors.primary }}>{email}</Text>
-              </Text>
-              <Text style={styles.title}>Insira o código e sua nova senha</Text>
-            </Text>
-          ) : (
-            <View style={{width:'100%'}}>
-              <LogoAndTagline />
-              <Text style={styles.title}>
-                Para redefinir sua <Text style={styles.strong}>senha</Text>, insira seu <Text style={styles.strong}>email</Text> abaixo. Enviaremos um código de verificação para você.
-              </Text>
-            </View>
-          )}
+          <View>
+            {sendEmail ? (
+              <View>
+                <LogoAndTagline text=""/>
+
+                <Text style={styles.title}>
+                  Enviamos um código de verificação para o e-mail{' '}
+                  <Text style={{ color: colors.primary, fontFamily: 'Poppins-SemiBold' }}>{email}</Text>
+                </Text>
+                <Text style={styles.title}>Insira o código e sua nova senha</Text>
+              </View>
+            ) : (
+              <View style={{alignItems: 'center', gap: 64}}>
+                <LogoAndTagline text="Redefinir senha"/>
+                <Text style={styles.title}>
+                  Para redefinir sua <Text style={styles.strong}>senha</Text>, insira seu <Text style={styles.strong}>email</Text> abaixo. Enviaremos um código de verificação para você.
+                </Text>
+              </View>
+            )}
+          </View>
 
           <View style={styles.wFull}>
             {!sendEmail ? (
               <CustomInput
                 label="Email"
                 placeholder="email@example.com"
+                value={email}
                 onChange={setEmail}
               />
             ) : (
               <View style={styles.fields}>
                 <View style={{width: '100%',display: 'flex',alignItems: 'center', justifyContent: 'center'}}>
-                <CodeField
-                  ref={ref}
-                  {...props}
-                  value={value}
-                  onChangeText={setValue}
-                  cellCount={CELL_COUNT}
-                  rootStyle={styles.codeFieldRoot}
-                  keyboardType='number-pad'
-                  textContentType='oneTimeCode'
-                  renderCell={({ index, symbol, isFocused }) => (
-                    <Text
-                      key={index}
-                      style={[styles.cell, isFocused && styles.focusCell]}
-                      onLayout={getCellOnLayoutHandler(index)}
-                    >
-                      {symbol || (isFocused ? <Cursor /> : null)}
-                    </Text>
-                  )}
+                  <CodeField
+                    ref={ref}
+                    {...props}
+                    value={value}
+                    onChangeText={setValue}
+                    cellCount={CELL_COUNT}
+                    rootStyle={styles.codeFieldRoot}
+                    keyboardType='number-pad'
+                    textContentType='oneTimeCode'
+                    renderCell={({ index, symbol, isFocused }) => (
+                      <Text
+                        key={index}
+                        style={[styles.cell, isFocused && styles.focusCell]}
+                        onLayout={getCellOnLayoutHandler(index)}
+                      >
+                        {symbol || (isFocused ? <Cursor /> : null)}
+                      </Text>
+                    )}
                   />
                 </View>
                 <CustomInput
                   label="Nova senha"
-                  placeholder="Digite"
+                  placeholder="Digite sua nova senha"
                   secureTextEntry={true}
                   onChange={setNewPassword}
                 />
                 <CustomInput
                   label="Confirme a nova senha"
-                  placeholder="Digite"
+                  placeholder="Digite novamente"
                   secureTextEntry={true}
                   onChange={setNewPasswordConfirm}
                 />    
               </View>
             )}
             {error && <Text style={styles.errorText}>{error}</Text>}
-            <TouchableOpacity
-              style={[styles.button, { marginTop: 16, marginBottom: keyboardOpen ? 20 : 0 }]}
-              onPress={handleChangePassword}>
-              <View style={styles.buttonContent}>
-                <Text style={styles.primaryText}>{sendEmail ? 'Alterar' : 'Enviar código'}</Text>
-              </View>
-            </TouchableOpacity>
+            <CustomButton
+              title={sendEmail ? 'Alterar senha' : 'Enviar código'}
+              onPress={() => handleChangePassword()} 
+              styleView={{ padding: 8}}
+              type="primary"
+              style={{ width: '100%', marginBottom: keyboardOpen ? 36 : 16}} 
+            />
           </View>
         </View>
       </ScrollView>
@@ -178,38 +184,44 @@ const ResetPassword = () =>{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: "#FFFFFF",
   },
   scrollContainer: {
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 80,
+    paddingBottom: 32,
   },
   root: {
-    width: '100%',
     flex: 1,
     backgroundColor: colors.background,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
+    gap: 32,
+    paddingTop: 60,
   },  
   title:{
     width: '100%',
+    textAlign: 'center',
     color: colors.textPrimary,
     fontFamily: 'Poppins-Regular',
     fontSize: 16,
-    marginBottom: 32,
+    marginTop: 24,
+    lineHeight: 24,
   },
   strong:{
     fontWeight: 'bold',
+    fontFamily: 'Poppins-SemiBold',
   },
   wFull:{
-    width: '100%'
+    flex: 1,
+    justifyContent: 'flex-start',
+    gap: 24,
   },
   fields:{
     width: '100%',
     flex: 1,
     display: 'flex',
-    gap: 8,
+    gap: 16,
   },
   passwordButton: {
     fontFamily: 'Poppins-Regular',
@@ -224,7 +236,7 @@ const styles = StyleSheet.create({
 
   button: {
     padding: 16,
-    borderRadius: 8,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -236,20 +248,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   codeFieldRoot: {
-    width: '80%',
+    width: '100%',
     marginBottom: 24,
-    gap: 8,
+    gap: 12,
   },
   cell: {
-    width: 40,
-    height: 40,
-    fontSize: 20,
-    lineHeight: 46,
-    fontFamily: "Poppins-Regular",
+    width: 48,
+    height: 48,
+    fontSize: 24,
+    lineHeight: 48,
+    fontFamily: "Poppins-SemiBold",
     borderWidth: 2,
-    borderRadius: 8,
-    borderColor: "#ccc",
+    borderRadius: 12,
+    borderColor: "#D1D1D1",
     textAlign: "center",
+    color: colors.textPrimary,
   },
   focusCell: {
     borderColor: colors.primary,
@@ -262,13 +275,15 @@ const styles = StyleSheet.create({
   primaryText: {
     color: '#FFFFFF',
     fontFamily: 'Poppins-Bold',
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 24,
-    letterSpacing: 1.4,
+    letterSpacing: 0.5,
   },
   errorText: {
     color: 'red',
-    marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
+    fontSize: 14,
+    marginTop: 8,
   },
   successText: {
     color: 'green',

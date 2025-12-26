@@ -51,7 +51,7 @@ function HomeStack() {
       <RootStack.Screen
         name="Recuperar senha"
         component={ResetPassword}
-        options={{ ...screens.withHeader } as any}
+        options={{ ...screens.withoutHeader } as any}
       />
       <RootStack.Screen
         name="Verification"
