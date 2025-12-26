@@ -5,11 +5,11 @@ const LogoAndTagline = ({ style = {} }) => {
   return (
     <View style={{ ...styles.root, ...style }}>
       <Image
-        source={require('../assets/images/ColoredLogo.png')}
-        style={styles.logo}
+        source={require('../assets/images/logo.png')}
+        resizeMode="contain"
       />
 
-      <Text style={styles.tagline}>Leve sua motivação para o próximo nível.</Text>
+      <Text style={styles.tagline}>Leve sua motivação para o próximo nível</Text>
     </View>
   );
 };
@@ -17,21 +17,18 @@ const LogoAndTagline = ({ style = {} }) => {
 const styles = StyleSheet.create({
   root: {
     alignItems: 'center',
-  },
-  logo: {
-    width: 147,
-    height: 42,
-    alignSelf: 'center',
-    marginVertical: 32,
+    justifyContent: 'center',
+    gap: 64
   },
   tagline: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: 'Poppins-SemiBold',
+    fontWeight: 'bold',
+    fontSize: 22,
+    lineHeight: 22,
     color: '#000',
     textAlign: 'center',
-    marginBottom: 16,
     flexWrap: 'wrap',
-    maxWidth: 200,
+    maxWidth: 250,
   },
 });
 
