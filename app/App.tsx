@@ -158,29 +158,29 @@ function App() {
 
   return (
     <NavigationContainer>
-      {isLoggedIn ? (
-        <SafeAreaView style={{ flex: 1 }}>
-          <RootSiblingParent>
-            <AuthProvider
-              isLoggedIn={isLoggedIn}
-              setIsLoggedIn={(value: any) => {
-                setIsLoggedIn(value);
-              }}>
-                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-                <RunProvider>
-                  <ProfileProvider>
-                    <LoggedInDrawer />
-                  </ProfileProvider>
-                </RunProvider>
-            </AuthProvider>
-          </RootSiblingParent>
-        </SafeAreaView>
-      ) : (
-        <SafeAreaView style={{ flex: 1 }} edges={[]}>
-          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
-          <HomeStack />
-        </SafeAreaView>
-      )}
+      <AuthProvider
+        isLoggedIn={isLoggedIn}
+        setIsLoggedIn={(value: any) => {
+          setIsLoggedIn(value);
+        }}>
+        {isLoggedIn ? (
+          <SafeAreaView style={{ flex: 1 }}>
+            <RootSiblingParent>
+                  <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+                  <RunProvider>
+                    <ProfileProvider>
+                      <LoggedInDrawer />
+                    </ProfileProvider>
+                  </RunProvider>
+            </RootSiblingParent>
+          </SafeAreaView>
+        ) : (
+          <SafeAreaView style={{ flex: 1 }} edges={[]}>
+            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+            <HomeStack />
+          </SafeAreaView>
+        )}
+      </AuthProvider>
     </NavigationContainer>
   );
 }
