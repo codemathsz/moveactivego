@@ -7,7 +7,7 @@ import { AppState, AppStateStatus } from "react-native";
 
 export interface AuthContextType {
   user: UserInterface | null;
-  login: (credentials: { email: string; password: string }) => Promise<string | null>;
+  login: (email: string, password: string) => Promise<string | null>;
   logout: () => void;
   updateProfile: (jwt: string) => Promise<void>;
   isLoggedIn: boolean;
@@ -110,9 +110,9 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     await AsyncStorage.setItem('token', JSON.stringify(tokenData));
   };
 
-  const login = async (credentials: { email: string; password: string }) => {
-    const { email, password } = credentials;
-
+  const login = async ( email: string, password: string ) => {
+    console.log("Auth login ", email, password);
+    
     const response = await authenticate(email, password);
     
     if (response.success) {

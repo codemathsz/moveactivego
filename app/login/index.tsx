@@ -9,19 +9,21 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from "@react-navigation/native";
 import { requestCode } from "@/apis/user.api";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomInput from "@/components/CustomInput";
+import { GRAY, GRAY_1, GRAY_DARK } from "@/constants/Colors";
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword] = useState(false);
   const [loading, setLoading] = useState(false)
   const { login } = useAuth();
 
-  const emailRef = useRef(null);
-  const passwordRef = useRef(null);
-
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
     const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
@@ -37,49 +39,93 @@ const LoginScreen = () => {
     };
   }, []);
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const showMessage = (message: string) => {
+    if (Platform.OS === 'android' || Platform.OS === 'ios') {
+      Alert.alert("Atenção", message);
+    } else {
+      Toast.show(message, {
+        duration: Toast.durations.SHORT,
+        position: Toast.positions.CENTER,
+        shadow: true,
+        animation: true,
+        hideOnPress: true,
+      });
+    }
+  };
+
+  const validateForm = (): boolean => {
+    let isValid = true;
+    setEmailError("");
+    setPasswordError("");
+
+    if (!email.trim()) {
+      setEmailError("E-mail é obrigatório");
+      showMessage("Por favor, insira seu e-mail");
+      isValid = false;
+    } else if (!validateEmail(email.trim())) {
+      setEmailError("E-mail inválido");
+      showMessage("Por favor, insira um e-mail válido");
+      isValid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Senha é obrigatória");
+      if (isValid) showMessage("Por favor, insira sua senha");
+      isValid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Senha deve ter no mínimo 6 caracteres");
+      if (isValid) showMessage("A senha deve ter no mínimo 6 caracteres");
+      isValid = false;
+    }
+
+    return isValid;
+  };
 
   const handleLoginPress = async () => {
-    setLoading(true)
-    const response = await login({ email, password }).finally(() => setLoading(false))
-    if(response){
-      console.log(response);
-      if(response === "Email não verificado. Por favor, verifique seu email antes de fazer login."){
-        const responseRequestCode = await requestCode(email, "email_confirmation")
-        if(responseRequestCode.success){
-          navigation.navigate("Verification", { email: email });
-        }else{
-          if(Platform.OS){
-            Alert.alert("Conta informada não está ativa. erro ao enviar código")
-          }else{
-            Toast.show("Conta informada não está ativa. erro ao enviar código", {
-              duration: Toast.durations.SHORT,
-              position: Toast.positions.CENTER,
-              shadow: true,
-              animation: true,
-              hideOnPress: true,
-            });
-          }
-        }
-        setLoading(false)
-      }else{
-        if(Platform.OS){
-          Alert.alert("Usuario ou senha inválido")
-        }else{
-          Toast.show("Usuario ou senha inválido", {
-            duration: Toast.durations.SHORT,
-            position: Toast.positions.CENTER,
-            shadow: true,
-            animation: true,
-            hideOnPress: true,
-          });
-        }
-        setLoading(false)
-      }
+    if (!validateForm()) {
+      return;
     }
-    setLoading(false)
+
+    setLoading(true);
+    
+    try {
+      console.log(email, password);
+      
+      const response = await login(email, password);
+      
+      if (response) {
+        console.log(response);
+        
+        if (response === "Email não verificado. Por favor, verifique seu email antes de fazer login.") {
+          const responseRequestCode = await requestCode(email.trim(), "email_confirmation");
+          
+          if (responseRequestCode.success) {
+            navigation.navigate("Verification", { email: email.trim() });
+          } else {
+            showMessage("Conta informada não está ativa. Erro ao enviar código");
+          }
+        } else {
+          showMessage("Usuário ou senha inválidos");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      showMessage("Erro ao fazer login. Tente novamente");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRegisterPress = () => {
+    navigation.navigate('Register');
+  };
+
+  const handleRecoverPasswordPress = () => {
     navigation.navigate("Recuperar senha")
   };
 
@@ -89,63 +135,58 @@ const LoginScreen = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
     >
-      <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.container}>
-          <LogoAndTagline />
-          <View style={{ marginTop: 24 }}>
-            <CustomLabel text='E-mail' />
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder='Email@email.com'
-                placeholderTextColor='#CCCCCC'
-                value={email}
-                onChangeText={setEmail}
-                keyboardType='email-address'
-                autoCapitalize='none'
-              />
+      <SafeAreaView style={{ flex: 1 , backgroundColor: '#FFFFFF'}} edges={['top', 'left', 'right']}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.container}>
+            <LogoAndTagline />
+            <View style={{  flex: 1, marginTop: 64, gap: 48 }}>
+              <View style={styles.inputContainer}>
+                <CustomInput 
+                  label="E-mail"
+                  placeholder="Insira seu email"
+                  value={email}
+                  onChange={setEmail}
+                />
+
+                <CustomInput 
+                  label="Senha"
+                  placeholder="Insira sua senha"
+                  value={password}
+                  onChange={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+              </View>
+              <View>  
+                <CustomButton
+                  title='Entrar' 
+                  onPress={() => handleLoginPress()} 
+                  styleView={{ padding: 8}}
+                  type="primary"
+                  style={{ width: '100%', marginBottom: keyboardOpen ? 36 : 16}} 
+                  loading={loading} 
+                />
+                <CustomButton
+                  title='Cadastre-se' 
+                  onPress={() => handleRegisterPress()} 
+                  styleView={{ padding: 8}}
+                  type="gray"
+                  style={{ width: '100%', marginBottom: keyboardOpen ? 36 : 16}} 
+                />
+                <TouchableOpacity
+                  onPress={() => handleRecoverPasswordPress()}
+                >
+                  <Text style={styles.forgotPassword}>Esqueceu a senha?</Text>
+                </TouchableOpacity>
+                <View style={styles.orContainer}>
+                  <View style={styles.orLine} />
+                  <Text style={styles.orText}>ou</Text>
+                  <View style={styles.orLine} />
+                </View>
+              </View>
             </View>
-
-            <CustomLabel text='Senha' />
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder='Insira sua senha'
-                placeholderTextColor='#CCCCCC'
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize='none'
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(prev => !prev)}
-                style={{
-                  width: 40,
-                  alignItems: "flex-end",
-                  justifyContent: "center",
-                }}
-              >
-                {
-                  password ? !showPassword ? (
-
-                    <AntDesign name="eye" size={24} color="black" />
-                  ) : (
-
-                    <Entypo name="eye-with-line" size={24} color="black" />
-                  ) : null
-                }
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => handleRegisterPress()}
-            >
-              <Text style={styles.forgotPassword}>Esqueceu sua senha?</Text>
-            </TouchableOpacity>
           </View>
-          <CustomButton title='Entrar' onPress={() => handleLoginPress()} style={{ marginBottom: keyboardOpen ? 36 : 16, marginHorizontal: 16 }} loading={loading} />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
 
     </KeyboardAvoidingView>
 
@@ -155,43 +196,45 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    justifyContent: "center",
+    flexDirection: 'column',
+    justifyContent: 'space-around',
   },
   scrollViewContent: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 24,
+    paddingTop: 80,
+    paddingBottom: 32,
     justifyContent: "space-between",
   },
   forgotPassword: {
-    fontSize: 14,
-    fontFamily: "Poppins-Regular",
-    color: "#4c4c4c",
+    fontSize: 17,
+    fontFamily: 'Poppins-Bold',
+    fontWeight: 'medium',
+    color: GRAY_DARK,
     textAlign: "center",
-    marginBottom: 20,
+    marginTop: 8,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+  orContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 32,
     marginBottom: 16,
   },
-  input: {
-    fontFamily: "Poppins-Regular",
+  orLine: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
-    fontSize: 16,
-    borderRadius: 8,
-    paddingVertical:4,
-    paddingHorizontal: 2,
-    color: 'black'
+    height: 1,
+    backgroundColor: GRAY,
   },
+  orText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Regular',
+    color: GRAY_1,
+    marginHorizontal: 12,
+    textTransform: 'uppercase'
+  },
+  inputContainer: {
+    gap: 24,
+  }
 });
 
 export default LoginScreen;

@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   button: {
-    paddingVertical: 12,
-    padding: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderRadius:   16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -122,8 +122,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: 'Poppins-SemiBold',
-    fontWeight: 'bold',
-    fontSize: 18,
+    fontWeight: 'semibold',
+    fontSize: 20,
     lineHeight: 24,
   },
   primaryText: {
