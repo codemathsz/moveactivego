@@ -5,12 +5,15 @@ import Icon from '@expo/vector-icons/Entypo';
 import IconFeather from '@expo/vector-icons/Feather';
 import { colors } from '../constants/Screen';
 import CustomLabel from './customLabel';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface CustomInputProps {
   label: string;
   placeholder: string;
   customIcon?: React.ReactElement<IconProps>;
   editable?: boolean;
+  value?: string;
   onChange?: (text: string) => void;
   secureTextEntry?: boolean;
   mask?: boolean;
@@ -28,6 +31,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   placeholder,
   customIcon,
   editable = true,
+  value,
   onChange,
   secureTextEntry = false,
   mask = false,
@@ -35,15 +39,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   const CustomIconComponent = customIcon;
 
-  const [text, setText] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  const change = (text: string) => {
-    setText(text);
-    if (onChange) {
-      onChange(text);
-    }
-  };
 
   return (
     <View style={styles.root}>
@@ -54,16 +50,15 @@ const CustomInput: React.FC<CustomInputProps> = ({
             <MaskInput
               style={styles.input}
               placeholder={placeholder}
-              value={text}
+              value={value}
               placeholderTextColor={'black'}
-              onChangeText={change}
+              onChangeText={onChange}
               mask={Masks.DATE_DDMMYYYY}
             />
             <Icon
               name="calendar"
               size={20}
               color="#212121"
-              style={styles.icon}
             />
           </View>
         ) : (
@@ -72,20 +67,19 @@ const CustomInput: React.FC<CustomInputProps> = ({
               style={styles.input}
               underlineColorAndroid={'transparent'}
               placeholder={placeholder}
-              value={text}
+              value={value}
               placeholderTextColor={'gray'}
-              onChangeText={change}
+              onChangeText={onChange}
               editable={editable}
               selectTextOnFocus={editable}
               secureTextEntry={secureTextEntry && !showPassword}
             />
             {secureTextEntry && (
               <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>
-                <IconFeather
-                  name={showPassword ? 'eye' : 'eye-off'}
+                <Ionicons 
+                  name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={24}
                   color={colors.textSecondary}
-                  style={styles.icon}
                 />
               </TouchableOpacity>
             )}
@@ -102,14 +96,15 @@ const CustomInput: React.FC<CustomInputProps> = ({
 };
 
 const styles = StyleSheet.create({
-  root: {},
-  inputContainer: {
+  root: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
     borderWidth: 1,
-    backgroundColor: "#FFF",
     borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderRadius: 18,
+    flexDirection: 'column',
+  },
+  inputContainer: {
     color: 'black',
     flexDirection: 'row',
     alignItems: 'center',
@@ -122,10 +117,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     fontSize: 16,
     color: 'black',
-  },
-  icon: {
-    marginRight: 16,
-    marginBottom: 12,
+    padding: 0
   },
 });
 

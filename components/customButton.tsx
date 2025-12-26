@@ -10,18 +10,19 @@ import {
   ViewStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BLACK, PRIMARY_GREEN, SECONDARY_GREEN, WHITE } from '../constants/Colors';
+import { BLACK, GRAY_DARK, PRIMARY_GREEN, SECONDARY_GREEN, WHITE } from '../constants/Colors';
 
 interface CustomButtonProps {
   title?: string;
   onPress: () => void;
-  type?: string;
+  type?: 'primary' | 'secondary' | 'gray';
   textStyle?: StyleProp<TextStyle>;
   style?: StyleProp<ViewStyle>;
   icon?: any;
   styleView?: StyleProp<ViewStyle>;
   loading?: boolean;
   spinnerColor?: string;
+  gradient?: boolean;
 }
 
 const CustomButton = ({
@@ -34,18 +35,20 @@ const CustomButton = ({
   styleView,
   loading = false,
   spinnerColor,
+  gradient = false
 }: CustomButtonProps) => {
 
   const buttonStyles = [
     styles.button,
     type === 'secondary' && styles.secondaryButton,
+    type === 'gray' && styles.grayButton,
     !title && styles.iconOnlyButton, 
     style,
   ];
 
   const textStyles = [
     styles.buttonText,
-    type === 'secondary' ? styles.secondaryText : styles.primaryText,
+    type === 'secondary' || type === 'gray' ? styles.secondaryText : styles.primaryText,
     textStyle,
   ];
 
@@ -68,7 +71,7 @@ const CustomButton = ({
     </>
   );
 
-  if (type === 'primary') {
+  if (type === 'primary' && gradient) {
     return (
       <TouchableOpacity onPress={onPress} style={[style]} disabled={loading}>
         <LinearGradient
@@ -95,16 +98,23 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   button: {
+    paddingVertical: 12,
     padding: 8,
-    borderRadius:   18,
+    borderRadius:   16,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+    backgroundColor: PRIMARY_GREEN,
   },
   secondaryButton: {
     backgroundColor: 'transparent',
     borderColor: PRIMARY_GREEN,
     borderWidth: 1,
+  },
+  grayButton: {
+    backgroundColor: '#E6E7EC',
+    borderWidth: 0,
+    color: '#292A2E',
   },
   buttonContent: {
     flexDirection: 'row',
@@ -112,15 +122,15 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: 'Poppins-SemiBold',
-    fontWeight: '600',
-    fontSize: 20,
+    fontWeight: 'bold',
+    fontSize: 18,
     lineHeight: 24,
   },
   primaryText: {
     color: WHITE,
   },
   secondaryText: {
-    color: BLACK,
+    color: GRAY_DARK,
   },
 });
 

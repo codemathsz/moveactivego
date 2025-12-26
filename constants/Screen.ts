@@ -10,7 +10,7 @@ const colors = {
 
   lines: '#bcbec9',
   background: '#f9f9f9',
-  border: '#ededed',
+  border: '#C5C5C5',
 
   textPrimary: '#212121',
   textSecondary: '#4c4c4c',

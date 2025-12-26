@@ -4,10 +4,12 @@ export const SECONDARY_GREEN = '#278e50';
 export const NAVY_BLUE = '#2D3C52';
 
 // Greyscale
+export const GRAY = '#C5C5C5';
 export const GRAY_LIGHT = '#EAEAEA';
 export const GRAY_VERY_LIGHT = '#E6E7EC';
 export const GRAY_MEDIUM = '#7C7D82';
 export const GRAY_DARK = '#292A2E';
+export const GRAY_1 = '#81809E';
 export const WHITE = '#FFFFFF';
 export const BLACK = '#000000';
 
