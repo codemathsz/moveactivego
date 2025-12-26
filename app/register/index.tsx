@@ -2,10 +2,12 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -22,6 +24,11 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js';
 import CountryPicker from 'react-native-country-picker-modal';
+import { SafeAreaView } from "react-native-safe-area-context";
+import CustomInput from "@/components/CustomInput";
+import { colors } from "@/constants/Screen";
+import { BLACK } from "@/constants/Colors";
+import CustomCheckbox from "@/components/CustomCheckbox";
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
@@ -35,11 +42,14 @@ const RegisterScreen = () => {
   const [loading, setLoading] = useState(false)
   const navigation = useNavigation<any>();
   const [countryCode, setCountryCode] = useState('BR');
-  const emailRef = useRef(null);
-  const phoneRef = useRef(null);
-  const birthdateRef = useRef(null);
-  const passwordRef = useRef(null);
-  const confirmPasswordRef = useRef(null);
+  const emailRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+  const birthdateRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  
 
   const handleRegisterPress = async () => {
     if (!name || !email || !birthdate || !password || !confirmPassword || !phone) {
@@ -55,6 +65,19 @@ const RegisterScreen = () => {
         });
       }
       
+      return;
+    } else if (!acceptedTerms) {
+      if(Platform.OS){
+        Alert.alert("Você precisa aceitar os termos e condições")
+      }else{
+        Toast.show("Você precisa aceitar os termos e condições", {
+          duration: Toast.durations.SHORT,
+          position: Toast.positions.CENTER,
+          shadow: true,
+          animation: true,
+          hideOnPress: true,
+        });
+      }
       return;
     } else if (password !== confirmPassword) {
       if(Platform.OS){
@@ -131,151 +154,146 @@ const RegisterScreen = () => {
     setPhone(parsed ? parsed.formatInternational() : text);
   };
 
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardOpen(true);
+    });
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardOpen(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <LogoAndTagline />
+      <SafeAreaView style={{ flex: 1 , backgroundColor: '#FFFFFF'}} edges={['top', 'left', 'right']}>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={{ flex: 1, marginTop: 24}}>
+            <LogoAndTagline text="Cadastre-se" />
 
-        <View style={styles.formContainer}>
-          <CustomLabel text='Nome' />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Nome e sobrenome'
-              placeholderTextColor='#CCCCCC'
-              value={name}
-              onChangeText={setName}
-              returnKeyType="next"
-              onSubmitEditing={() => emailRef.current.focus()}
-            />
-            {/* ICONE */}
-          </View>
-
-          <CustomLabel text='E-mail' />
-          <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder='Email@email.com'
-                placeholderTextColor='#CCCCCC'
-                value={email}
-                onChangeText={setEmail}
-                keyboardType='email-address'
-                autoCapitalize='none'
-                ref={emailRef}
-                returnKeyType="next"
-                onSubmitEditing={() => phoneRef.current.focus()}
+            <View style={styles.inputContainer}>
+              <CustomInput 
+                label="Nome"
+                placeholder="Nome e sobrenome"
+                value={name}
+                onChange={setName}
+                propsInput={{
+                  returnKeyType: 'next',
+                  onSubmitEditing: () => emailRef.current!.focus()
+                }}
               />
-            {/* ICONE */}
+
+              <CustomInput 
+                label="E-mail"
+                placeholder="Insira seu email"
+                value={email}
+                onChange={setEmail}
+                ref={emailRef}
+                propsInput={{
+                  returnKeyType: 'next',
+                  keyboardType: 'email-address',
+                  autoCapitalize: 'none',
+                  onSubmitEditing: () => phoneRef.current!.focus()
+                }}
+              />
+            
+              <View style={styles.root}>
+                <CustomLabel text='Celular' />
+                <View style={styles.phoneContainer}>
+                  <CountryPicker
+                    countryCode={countryCode as any}
+                    withFilter
+                    withFlag
+                    withCallingCode
+                    onSelect={(country) => setCountryCode(country.cca2)}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Número de telefone"
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={handleChange}
+                  />
+                </View>
+              </View>
+
+              <CustomInput 
+                label="Data de Nascimento"
+                placeholder="00/00/0000"
+                value={birthdate}
+                onChange={setBirthdate}
+                mask={true}
+                ref={birthdateRef}
+                propsInput={{
+                  returnKeyType: 'next',
+                  onSubmitEditing: () => passwordRef.current!.focus()
+                }}
+              />
+
+              <CustomInput 
+                label="Senha"
+                placeholder="Insira sua senha"
+                value={password}
+                onChange={setPassword}
+                secureTextEntry={!showPassword}
+                ref={passwordRef}
+                propsInput={{
+                  autoCapitalize: 'none',
+                  returnKeyType: 'next',
+                  onSubmitEditing: () => confirmPasswordRef.current!.focus()
+                }}
+              />
+
+              <CustomInput 
+                label="Confirme sua senha"
+                placeholder="Insira sua senha"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                secureTextEntry={!showConfirmPassword}
+                ref={confirmPasswordRef}
+                propsInput={{
+                  autoCapitalize: 'none',
+                  returnKeyType: 'done',
+                  onSubmitEditing: () => confirmPasswordRef.current!.focus()
+                }}
+              />
+              
+              <View style={{ marginBottom: 10 }}>
+                <CustomButton
+                  title='Cadastre-se' 
+                  onPress={() => handleRegisterPress()} 
+                  styleView={{ padding: 8}}
+                  type="primary"
+                  style={{ width: '100%', marginBottom: keyboardOpen ? 36 : 16}} 
+                  loading={loading} 
+                />
+                <View style={styles.termsContainer}>
+                  <CustomCheckbox
+                    checked={acceptedTerms}
+                    onPress={() => setAcceptedTerms(!acceptedTerms)}
+                    size={20}
+                  />
+                  <TouchableOpacity 
+                    onPress={() => setAcceptedTerms(!acceptedTerms)}
+                    style={{ flex: 1, marginLeft: 8 }}
+                  >
+                    <Text style={styles.textTerms}>
+                      Eu li e concordo com o{' '}
+                      <Text style={styles.textTermsLink}>Contrato do Software</Text>
+                      {' '}e a{' '}
+                      <Text style={styles.textTermsLink}>Política de Privacidade</Text>
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
           </View>
-
-          <CustomLabel text='Celular' />
-          <View style={styles.inputContainer}>
-            <CountryPicker
-              countryCode={countryCode as any}
-              withFilter
-              withFlag
-              withCallingCode
-              onSelect={(country) => setCountryCode(country.cca2)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Número de telefone"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={handleChange}
-            />
-            {/* ICONE */}
-          </View>
-
-          <CustomLabel text='Data de Nascimento' />
-          <View style={styles.inputContainer}>
-            <MaskInput
-              style={styles.input}
-              placeholder='00/00/00'
-              placeholderTextColor='#CCCCCC'
-              value={birthdate}
-              onChangeText={setBirthdate}
-              mask={Masks.DATE_DDMMYYYY}
-              ref={birthdateRef}
-              returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current.focus()}
-            />
-            {/* ICONE */}
-          </View>
-
-          <CustomLabel text='Senha' />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Insira sua senha'
-              placeholderTextColor='#CCCCCC'
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize='none'
-              ref={passwordRef}
-              returnKeyType="next"
-              onSubmitEditing={() => confirmPasswordRef.current.focus()}
-            />
-            <TouchableOpacity
-              onPress={() => setShowPassword(prev => !prev)}
-              style={{
-                width: 40,
-                alignItems: "flex-end",
-                justifyContent: "center",
-              }}
-            >
-              {
-                password ? !showPassword ? (
-
-                  <AntDesign name="eye" size={24} color="black" />
-                ) : (
-
-                  <Entypo name="eye-with-line" size={24} color="black" />
-                ) : null
-              }
-            </TouchableOpacity>
-          </View>
-
-          <CustomLabel text='Confirme sua senha' />
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder='Insira sua senha'
-              placeholderTextColor='#CCCCCC'
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize='none'
-              ref={confirmPasswordRef}
-              returnKeyType="done"
-            />
-            <TouchableOpacity
-              onPress={() => setShowConfirmPassword(prev => !prev)}
-              style={{
-                width: 40,
-                alignItems: "flex-end",
-                justifyContent: "center",
-              }}
-            >
-              {
-                confirmPassword ? !showConfirmPassword ? (
-
-                  <AntDesign name="eye" size={24} color="black" />
-                ) : (
-
-                  <Entypo name="eye-with-line" size={24} color="black" />
-                ) : null
-              }
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={{ marginBottom: 10 }}>
-          <CustomButton title='Criar conta' onPress={() => handleRegisterPress()} loading={loading} />
-        </View>
-
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 };
@@ -299,16 +317,10 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 16,
+    flex: 1,
+    marginTop: 24,
+    flexDirection: "column",
+    gap: 16,
   },
   input: {
     fontFamily: "Poppins-Regular",
@@ -320,6 +332,35 @@ const styles = StyleSheet.create({
     paddingVertical:4,
     paddingHorizontal: 2,
     color: 'black'
+  },
+  root: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    flexDirection: 'column',
+  },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 16,
+    paddingHorizontal: 4,
+  },
+  textTerms: {
+    fontFamily: 'Poppins-Regular',
+    fontSize: 13,
+    color: BLACK,
+    lineHeight: 20,
+  },
+  textTermsLink: {
+    textDecorationLine: 'underline',
+    fontFamily: 'Poppins-SemiBold',
   },
 });
 

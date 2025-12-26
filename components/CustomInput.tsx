@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, View, TextInputProps} from 'react-native';
 import MaskInput, { Masks } from 'react-native-mask-input';
 import Icon from '@expo/vector-icons/Entypo';
 import IconFeather from '@expo/vector-icons/Feather';
@@ -18,6 +18,8 @@ interface CustomInputProps {
   secureTextEntry?: boolean;
   mask?: boolean;
   keyboard?: string;
+  propsInput?: TextInputProps;
+  ref?: any;
 }
 
 interface IconProps {
@@ -35,7 +37,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
   onChange,
   secureTextEntry = false,
   mask = false,
-  keyboard
+  keyboard,
+  propsInput,
+  ref
 }) => {
   const CustomIconComponent = customIcon;
 
@@ -73,6 +77,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
               editable={editable}
               selectTextOnFocus={editable}
               secureTextEntry={secureTextEntry && !showPassword}
+              ref={ref}
+              {...propsInput}
             />
             {secureTextEntry && (
               <TouchableOpacity onPress={() => setShowPassword(prev => !prev)}>

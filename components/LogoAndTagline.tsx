@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-const LogoAndTagline = ({ style = {} }) => {
+const LogoAndTagline = ({ style = {}, text = "Leve sua motivação para o próximo nível" }) => {
   return (
     <View style={{ ...styles.root, ...style }}>
       <Image
@@ -9,7 +9,7 @@ const LogoAndTagline = ({ style = {} }) => {
         resizeMode="contain"
       />
 
-      <Text style={styles.tagline}>Leve sua motivação para o próximo nível</Text>
+      <Text style={styles.tagline}>{text}</Text>
     </View>
   );
 };
