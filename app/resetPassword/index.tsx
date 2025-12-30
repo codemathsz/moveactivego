@@ -19,6 +19,7 @@ import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-
 import Toast from "react-native-root-toast";
 import { useNavigation } from "@react-navigation/native";
 import CustomButton from "@/components/customButton";
+import { Fonts } from "@/constants/Fonts";
 
 const ResetPassword = () =>{
   const navigation = useNavigation<any>()
@@ -107,7 +108,7 @@ const ResetPassword = () =>{
 
                 <Text style={styles.title}>
                   Enviamos um código de verificação para o e-mail{' '}
-                  <Text style={{ color: colors.primary, fontFamily: 'Poppins-SemiBold' }}>{email}</Text>
+                  <Text style={{ color: colors.primary, fontFamily: Fonts.inter.semiBold }}>{email}</Text>
                 </Text>
                 <Text style={styles.title}>Insira o código e sua nova senha</Text>
               </View>
@@ -203,14 +204,13 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'center',
     color: colors.textPrimary,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: Fonts.inter.regular,
     fontSize: 16,
     marginTop: 24,
     lineHeight: 24,
   },
   strong:{
-    fontWeight: 'bold',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: Fonts.inter.semiBold,
   },
   wFull:{
     flex: 1,
@@ -224,8 +224,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   passwordButton: {
-    fontFamily: 'Poppins-Regular',
-    fontWeight: '700',
+    fontFamily: Fonts.inter.regular,
     fontSize: 14,
     lineHeight: 24,
     color: colors.primary,
@@ -257,7 +256,7 @@ const styles = StyleSheet.create({
     height: 48,
     fontSize: 24,
     lineHeight: 48,
-    fontFamily: "Poppins-SemiBold",
+    fontFamily: Fonts.inter.semiBold,
     borderWidth: 2,
     borderRadius: 12,
     borderColor: "#D1D1D1",
@@ -274,21 +273,21 @@ const styles = StyleSheet.create({
 
   primaryText: {
     color: '#FFFFFF',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: Fonts.inter.bold,
     fontSize: 16,
     lineHeight: 24,
     letterSpacing: 0.5,
   },
   errorText: {
     color: 'red',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: Fonts.inter.regular,
     fontSize: 14,
     marginTop: 8,
   },
   successText: {
     color: 'green',
     marginBottom: 10,
-    fontFamily: 'Poppins-Bold',
+    fontFamily: Fonts.inter.bold,
   },
 
 });

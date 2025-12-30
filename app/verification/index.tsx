@@ -9,6 +9,7 @@ import { colors } from "../../constants/Screen";
 import { confirmRegistration, requestCode, verifyEmail } from "../../apis/user.api";
 import { UserConfirmation } from "../../interfaces/user-confirmation.interface";
 import { UserVerifyEmailWithCode } from "../../interfaces/user-verify-email";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   Verification: { email: string };
@@ -90,60 +91,61 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
 
   return (
     <View style={styles.root}>
-      <View style={styles.container}>
-        <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 8 }}>
-          <TouchableOpacity style={{ marginTop: -50 }} onPress={() => {
-            navigation.navigate("Home");
-          }}>
-            {/* ICON */}
-          </TouchableOpacity>
-          <LogoAndTagline style={{ flex: 1 }} />
-          <View></View>
-        </View>
-        <Text style={styles.title}>Confirme seu cadastro</Text>
-        <Text style={styles.description}>
-          <Text>Enviamos um código de verificação para o e-mail </Text>
-          <Text style={{ color: colors.primary }}>{email}</Text>
-        </Text>
-        <Text style={styles.description}>Insira o código para validar seu cadastro</Text>
-
-
-        <CodeField
-          ref={ref}
-          {...props}
-          // Use `caretHidden={false}` when users can't paste a text value, because context menu doesn't appear
-          value={value}
-          onChangeText={setValue}
-          cellCount={CELL_COUNT}
-          rootStyle={styles.codeFieldRoot}
-          keyboardType='number-pad'
-          textContentType='oneTimeCode'
-          renderCell={({ index, symbol, isFocused }) => (
-            <Text
-              key={index}
-              style={[styles.cell, isFocused && styles.focusCell]}
-              onLayout={getCellOnLayoutHandler(index)}
-            >
-              {symbol || (isFocused ? <Cursor /> : null)}
-            </Text>
-          )}
-        />
-
-        <TouchableOpacity onPress={() => handleReesendCode()}>
-          <View style={{ alignItems: 'center' }}>
-            <Text style={styles.resendCodeText}>reenviar código</Text>
-            <View style={{ height: 2, backgroundColor: colors.primary, width: '100%', marginTop: 1 }}></View>
+      <SafeAreaView style={{ flex: 1 , backgroundColor: '#FFFFFF'}} edges={['top', 'left', 'right']}>
+        <View style={styles.container}>
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 8 }}>
+            <LogoAndTagline style={{ flex: 1 }} />
+            
           </View>
-        </TouchableOpacity>
-      </View>
+          <Text style={styles.title}>Confirme seu cadastro</Text>
+          <Text style={styles.description}>
+            <Text>Enviamos um código de verificação para o e-mail </Text>
+            <Text style={{ color: colors.primary }}>{email}</Text>
+          </Text>
+          <Text style={styles.description}>Insira o código para validar seu cadastro</Text>
 
-      <CustomButton
-        title='Validar Código'
-        loading={loading}
-        onPress={() => {
-          handleRegisterPress();
-        }}
-      />
+
+          <CodeField
+            ref={ref}
+            {...props}
+            // Use `caretHidden={false}` when users can't paste a text value, because context menu doesn't appear
+            value={value}
+            onChangeText={setValue}
+            cellCount={CELL_COUNT}
+            rootStyle={styles.codeFieldRoot}
+            keyboardType='number-pad'
+            textContentType='oneTimeCode'
+            renderCell={({ index, symbol, isFocused }) => (
+              <Text
+                key={index}
+                style={[styles.cell, isFocused && styles.focusCell]}
+                onLayout={getCellOnLayoutHandler(index)}
+              >
+                {symbol || (isFocused ? <Cursor /> : null)}
+              </Text>
+            )}
+          />
+
+          <TouchableOpacity onPress={() => handleReesendCode()}>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.resendCodeText}>reenviar código</Text>
+              <View style={{ height: 2, backgroundColor: colors.primary, width: '100%', marginTop: 1 }}></View>
+            </View>
+          </TouchableOpacity>
+          <View style={{ width: '100%', marginTop: 64, justifyContent: 'center', alignItems: 'center' }}>
+            <CustomButton
+              style={{width: '90%'}}
+              styleView={{ padding: 8}}
+              title='Validar Código'
+              loading={loading}
+              onPress={() => {
+                handleRegisterPress();
+              }}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+      
     </View>
   );
 };
@@ -155,6 +157,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   container: {
+    marginTop: 32,
     alignItems: "center",
     justifyContent: "center",
   },

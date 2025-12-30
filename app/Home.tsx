@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import CustomButton from '../components/customButton';
+import { Fonts } from '@/constants/Fonts';
 
 const HomeScreen = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -56,28 +57,20 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   logoContainer: {
-    paddingTop: 40,
+    paddingTop: 64,
     alignItems: 'center',
-  },
-  logo: {
-    fontSize: 48,
-    fontFamily: 'Poppins-Bold',
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontStyle: 'italic',
   },
   contentContainer: {
     paddingHorizontal: 20,
     paddingBottom: 50,
   },
   tagline: {
-    fontSize: 48,
-    fontFamily: 'Poppins-Bold',
+    fontSize: 58,
+    fontFamily: Fonts.trailers.bold, // Testando com Inter primeiro
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 43,
-    fontWeight: 'bold',
+    marginBottom: 64,
+    lineHeight: 54,
   },
   buttonsContainer: {
     width: '100%',

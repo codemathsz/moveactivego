@@ -17,12 +17,17 @@ import Sidebar from '@/components/sidebar';
 import VerificationScreen from './verification';
 import ProfileScreen from './profile';
 import ActivitiesScreen from './activities';
-import { Alert, StatusBar } from 'react-native';
+import { ActivityIndicator, Alert, StatusBar, Text, View } from 'react-native';
 import InventoryScreen from './inventory';
 import ItemScreen from './item';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgroundRestrictions';
+import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Previne a splash screen de esconder automaticamente
+SplashScreen.preventAutoHideAsync();
 
 const RootStack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -139,6 +144,56 @@ function LoggedInDrawer() {
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadFonts() {
+      try {
+        await Font.loadAsync({
+          // Inter
+          'Inter-Thin': require('../assets/fonts/Inter/Inter-Thin.ttf'),
+          'Inter-ThinItalic': require('../assets/fonts/Inter/Inter-ThinItalic.ttf'),
+          'Inter-ExtraLight': require('../assets/fonts/Inter/Inter-ExtraLight.ttf'),
+          'Inter-ExtraLightItalic': require('../assets/fonts/Inter/Inter-ExtraLightItalic.ttf'),
+          'Inter-Light': require('../assets/fonts/Inter/Inter-Light.ttf'),
+          'Inter-LightItalic': require('../assets/fonts/Inter/Inter-LightItalic.ttf'),
+          'Inter-Regular': require('../assets/fonts/Inter/Inter-Regular.ttf'),
+          'Inter-Italic': require('../assets/fonts/Inter/Inter-Italic.ttf'),
+          'Inter-Medium': require('../assets/fonts/Inter/Inter-Medium.ttf'),
+          'Inter-MediumItalic': require('../assets/fonts/Inter/Inter-MediumItalic.ttf'),
+          'Inter-SemiBold': require('../assets/fonts/Inter/Inter-SemiBold.ttf'),
+          'Inter-SemiBoldItalic': require('../assets/fonts/Inter/Inter-SemiBoldItalic.ttf'),
+          'Inter-Bold': require('../assets/fonts/Inter/Inter-Bold.ttf'),
+          'Inter-BoldItalic': require('../assets/fonts/Inter/Inter-BoldItalic.ttf'),
+          'Inter-ExtraBold': require('../assets/fonts/Inter/Inter-ExtraBold.ttf'),
+          'Inter-ExtraBoldItalic': require('../assets/fonts/Inter/Inter-ExtraBoldItalic.ttf'),
+          'Inter-Black': require('../assets/fonts/Inter/Inter-Black.ttf'),
+          'Inter-BlackItalic': require('../assets/fonts/Inter/Inter-BlackItalic.ttf'),
+          
+          // InterDisplay for big titles
+          'InterDisplay-Light': require('../assets/fonts/Inter/InterDisplay-Light.ttf'),
+          'InterDisplay-Regular': require('../assets/fonts/Inter/InterDisplay-Regular.ttf'),
+          'InterDisplay-Italic': require('../assets/fonts/Inter/InterDisplay-Italic.ttf'),
+          'InterDisplay-Medium': require('../assets/fonts/Inter/InterDisplay-Medium.ttf'),
+          'InterDisplay-MediumItalic': require('../assets/fonts/Inter/InterDisplay-MediumItalic.ttf'),
+          'InterDisplay-SemiBold': require('../assets/fonts/Inter/InterDisplay-SemiBold.ttf'),
+          'InterDisplay-SemiBoldItalic': require('../assets/fonts/Inter/InterDisplay-SemiBoldItalic.ttf'),
+          'InterDisplay-Bold': require('../assets/fonts/Inter/InterDisplay-Bold.ttf'),
+          
+          // TT Trailers
+          'Trailers-Bold': require('../assets/fonts/Trailers/Trailers-Trial-Bold.ttf'),
+         
+        });
+        setFontsLoaded(true);
+      } catch (e) {
+        console.warn('Erro ao carregar fontes:', e);
+      } finally {
+        await SplashScreen.hideAsync();
+      }
+    }
+
+    loadFonts();
+  }, []);
 
   async function checkRestritions() {
     const restriction = await checkBackgroundRestrictions()
@@ -155,6 +210,15 @@ function App() {
   useEffect(() =>{
     checkRestritions()
   },[])
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
+        <ActivityIndicator size="large" color="#268E50" />
+        <Text>Carregando fontes...</Text>
+      </View>
+    )
+  }
 
   return (
     <NavigationContainer>

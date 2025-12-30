@@ -1,3 +1,5 @@
+import { GRAY_DARK } from '@/constants/Colors';
+import { Fonts } from '@/constants/Fonts';
 import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
@@ -21,11 +23,10 @@ const styles = StyleSheet.create({
     gap: 64
   },
   tagline: {
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: 'bold',
-    fontSize: 22,
+    fontFamily: Fonts.inter.semiBold,
+    fontSize: 20,
     lineHeight: 22,
-    color: '#000',
+    color: GRAY_DARK,
     textAlign: 'center',
     flexWrap: 'wrap',
     maxWidth: 250,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BLACK, GRAY_DARK, PRIMARY_GREEN, SECONDARY_GREEN, WHITE } from '../constants/Colors';
+import { Fonts } from '@/constants/Fonts';
 
 interface CustomButtonProps {
   title?: string;
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius:   16,
+    borderRadius:   18,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -121,8 +122,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    fontFamily: 'Poppins-SemiBold',
-    fontWeight: 'semibold',
+    fontFamily: Fonts.inter.bold,
     fontSize: 20,
     lineHeight: 24,
   },

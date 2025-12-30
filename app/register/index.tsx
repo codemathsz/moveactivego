@@ -29,6 +29,7 @@ import CustomInput from "@/components/CustomInput";
 import { colors } from "@/constants/Screen";
 import { BLACK } from "@/constants/Colors";
 import CustomCheckbox from "@/components/CustomCheckbox";
+import { Fonts } from "@/constants/Fonts";
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
@@ -323,7 +324,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
-    fontFamily: "Poppins-Regular",
+    fontFamily: Fonts.inter.regular,
     flex: 1,
     backgroundColor: "#FFFFFF",
     borderWidth: 0,
@@ -353,14 +354,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   textTerms: {
-    fontFamily: 'Poppins-Regular',
+    fontFamily: Fonts.inter.regular,
     fontSize: 13,
     color: BLACK,
     lineHeight: 20,
   },
   textTermsLink: {
     textDecorationLine: 'underline',
-    fontFamily: 'Poppins-SemiBold',
+    fontFamily: Fonts.inter.semiBold,
   },
 });
 

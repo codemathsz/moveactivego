@@ -12,6 +12,7 @@ import { requestCode } from "@/apis/user.api";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomInput from "@/components/CustomInput";
 import { GRAY, GRAY_1, GRAY_DARK } from "@/constants/Colors";
+import { Fonts } from "@/constants/Fonts";
 
 const LoginScreen = () => {
   const navigation = useNavigation<any>();
@@ -208,8 +209,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: 17,
-    fontFamily: 'Poppins-Bold',
-    fontWeight: 'medium',
+    fontFamily: Fonts.inter.medium,
     color: GRAY_DARK,
     textAlign: "center",
     marginTop: 8,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   },
   orText: {
     fontSize: 16,
-    fontFamily: 'Poppins-Regular',
+    fontFamily: Fonts.inter.medium,
     color: GRAY_1,
     marginHorizontal: 12,
     textTransform: 'uppercase'

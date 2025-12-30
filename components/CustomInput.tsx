@@ -7,6 +7,7 @@ import { colors } from '../constants/Screen';
 import CustomLabel from './customLabel';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Fonts } from '@/constants/Fonts';
 
 interface CustomInputProps {
   label: string;
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 0,
     backgroundColor: 'transparent',
-    fontFamily: 'Poppins-Regular',
+    fontFamily: Fonts.inter.regular,
     fontSize: 16,
     color: 'black',
     padding: 0

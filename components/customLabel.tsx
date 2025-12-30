@@ -1,3 +1,4 @@
+import { Fonts } from '@/constants/Fonts';
 import React from 'react';
 import { StyleProp, StyleSheet, Text, TextStyle, View } from 'react-native';
 
@@ -12,8 +13,9 @@ const CustomLabel = ({ text, style }: { text: string, style?: StyleProp<TextStyl
 const styles = StyleSheet.create({
     text: {
         fontSize: 14,
+        lineHeight: 22,
         color: '#4C4C4C',
-        fontFamily: 'Poppins-Bold',
+        fontFamily: Fonts.inter.regular,
     },
 });
 
