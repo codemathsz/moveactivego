@@ -25,6 +25,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgroundRestrictions';
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { LoadingLogo } from '@/components/LoadingLogo';
 
 // Previne a splash screen de esconder automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -213,10 +214,7 @@ function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{flex:1, justifyContent:'center', alignItems:'center'}}>
-        <ActivityIndicator size="large" color="#268E50" />
-        <Text>Carregando fontes...</Text>
-      </View>
+      <LoadingLogo />
     )
   }
 
