@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFFFFF",
     justifyContent: 'space-between',
     gap: 32,
     paddingTop: 60,

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { Image, ImageBackground, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Image, ImageBackground, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import CustomButton from '../components/customButton';
 import { Fonts } from '@/constants/Fonts';
 
@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   logoContainer: {
-    paddingTop: 64,
+    paddingTop: Platform.OS === 'ios' ? 32 : 48,
     alignItems: 'center',
   },
   contentContainer: {
