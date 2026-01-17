@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { SafeAreaView, StyleSheet, View } from 'react-native';
 import MapArea from '../../components/mapArea';
 import NavigationBar from '../../components/navigationBar';
 import RunBar from '../../components/RunBar';
+import CountdownScreen from '../../components/CountdownScreen';
 import { colors } from '../../constants/Screen';
+import { useNavigation } from '@react-navigation/native';
 
 interface RouteParams {
   isRunning?: boolean
@@ -23,6 +25,22 @@ interface RouteParamsLocation {
 }
 
 const RunScreen = () => {
+  const [showCountdown, setShowCountdown] = useState(true);
+  const navigation = useNavigation();
+
+  useLayoutEffect(() => {
+    if (showCountdown) {
+      navigation.setOptions({ headerShown: false });
+    }
+  }, [showCountdown, navigation]);
+
+  const handleCountdownComplete = () => {
+    setShowCountdown(false);
+  };
+
+  if (showCountdown) {
+    return <CountdownScreen onComplete={handleCountdownComplete} />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>

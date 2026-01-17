@@ -38,15 +38,6 @@ const DashboardScreen = () =>{
         <MapArea start={false} dashboard={true} skill={undefined} />
       </View>
 
-      <View style={styles.buttonContainer}>
-        <CustomButton 
-          title="Iniciar Corrida" 
-          onPress={handleStartRun}
-          type="primary"
-          gradient={false}
-        />
-      </View>
-
       <View style={styles.navigationBar}>
         <NavigationBar />
       </View>
@@ -75,7 +66,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     marginTop: 12,
-    marginBottom: 12,
+    marginBottom: 80,
   },
   buttonContainer: {
     paddingHorizontal: 16,

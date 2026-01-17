@@ -84,7 +84,7 @@ function LoggedInStackScreen() {
       <LoggedInStack.Screen
         name="Run"
         component={RunScreen}
-        options={{ ...screens.withHeader, title: "Corrida", } as any}
+        options={{ ...screens.withoutHeader } as any}
       />
       <LoggedInStack.Screen
         name="Dashboard"
