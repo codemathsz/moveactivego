@@ -1,78 +1,71 @@
 // StatsBar.js
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-/* import { useProfile } from '../src/contexts/ProfileContext'; */
 import { colors } from '../constants/Screen';
-/* import { getTotalMission, getUserPointsDay, getUserTotalPoints } from '../src/apis/user.api'; */
-/* import { useAuth } from '../src/contexts/AuthContext'; */
+import { useAuth } from '../contexts/AuthContext';
+import { getUser } from '../apis/user.api';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const StatsBar = () => {
-/*   const { profile, userInfo } = useProfile(); */
-  const levelIcon = require('../assets/icons/move-green-icon.png');
-  const energyIcon = require('../assets/icons/energy-icon.png');
-  const coinsIcon = require('../assets/icons/coins-icon.png');
-/*   const { user, jwt } = useAuth(); */
-  const [totalPoints, setTotalPoints] = useState<number>(0);
-  const [totalMission, setTotalMission] = useState<number>(0);
-  const [missionCompleted, setMissionCompleted] = useState<number>(0);
-  const [width, setWidth] = useState<string>('0');
+  const { jwt } = useAuth();
+  const [steps, setSteps] = useState<number>(0);
+  const [calories, setCalories] = useState<number>(0);
+  const [distance, setDistance] = useState<number>(0);
+  const [items, setItems] = useState<number>(0);
 
-  /* useEffect(() => {
-    getUserPoints();
-  }, []); */
-
-  /* const getUserPoints = async () => {
+  const fetchUserStats = async () => {
     try {
       if (jwt) {
-        const total = await getUserTotalPoints(jwt);
-        if(total){
-          setTotalPoints(Number(total))
-        }
-        const totalMissions = await getTotalMission(jwt)
-        if(totalMissions){
-          setTotalMission(Number(total))
-        }
-        const userPoints = await getUserPointsDay(jwt);
-				if (totalMissions > 0) {
-					const completedMissions = userPoints.length;
-          setMissionCompleted(userPoints.length)
-					const percentageCompleted = (completedMissions / totalMissions) * 100;
-					setWidth(percentageCompleted.toFixed(2));
-				}
-      } else {
-        console.error("Token JWT é nulo.");
+        const userInfo = await getUser(jwt);
+        // Converter distância em km para passos (aproximadamente 1km = 1400 passos)
+        const totalSteps = Math.floor((userInfo?.total_distance || 0) * 1400);
+        setSteps(totalSteps);
+        setCalories(Math.floor(userInfo?.total_calories || 0));
+        setDistance(userInfo?.total_distance || 0);
+        // Items pode ser mockado ou vir de outra fonte
+        setItems(19);
       }
     } catch (error) {
-      console.error("Erro ao buscar produtos:", error);
+      console.error("Erro ao buscar stats:", error);
     }
-  }; */
-  
-  const calculateWidth = (percentage: string) => {
-		return `${percentage}%`;
-	  };
+  };
 
-	const progressBarWidth = calculateWidth(width);
+  useEffect(() => {
+    fetchUserStats();
+  }, []);
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        <View style={styles.itemLeft}>
-          <Image source={levelIcon} style={styles.icon} />
-          <Text style={styles.text}>Level 1000</Text>
-        </View>
-        <View style={styles.itemRight}>
-          {/* <View style={styles.row}>
-            <Image source={coinsIcon} style={styles.icon} />
-            <Text style={styles.text}>{totalPoints || 0}</Text>
-          </View> */}
-        </View>
+      <View style={styles.statCard}>
+        <Text style={styles.emoji}>
+          <Image source={require('../assets/images/shoe-run.png')} style={{width:32, height:32}} />
+        </Text>
+        <Text style={styles.value}>{(steps / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</Text>
+        <Text style={styles.label}>passos</Text>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Missões diárias</Text>
-        <Text style={styles.value}>{missionCompleted}/{totalMission}</Text>
+      
+      <View style={styles.statCard}>
+        <Text style={styles.emoji}>
+          <Image source={require('../assets/images/fire.png')} style={{width:32, height:32}} />
+        </Text>
+        <Text style={styles.value}>{calories.toLocaleString('pt-BR')}</Text>
+        <Text style={styles.label}>kcal</Text>
       </View>
-      <View style={styles.progressBarBackground}>
-        <View style={[styles.progressBarFill, { width: progressBarWidth }]} />
+      
+      <View style={styles.statCard}>
+        <Text style={styles.emoji}>
+          <MaterialCommunityIcons name="timer-outline" size={24} color="#0088FF" />
+        </Text>
+        <Text style={styles.value}>{distance.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</Text>
+        <Text style={styles.label}>km</Text>
+      </View>
+      
+      <View style={styles.statCard}>
+        <Text style={styles.emoji}>
+          <Ionicons name="medal-outline" size={24} color="#12131A" />
+        </Text>
+        <Text style={styles.value}>{items}</Text>
+        <Text style={styles.label}>itens</Text>
       </View>
     </View>
   );
@@ -80,60 +73,34 @@ const StatsBar = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#ECF8ED',
+    borderRadius: 18,
+    padding: 12,
+    gap: 8,
+  },
+  statCard: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
   },
-  itemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  itemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 32,
-  },
-  icon: {
-    width: 24,
-    height: 24,
-    marginRight: 8,
-    resizeMode: 'contain'
-  },
-  text: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 12,
-    color: '#4c4c4c',
-  },
-  label: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 12,
-    color: '#4c4c4c',
-    marginTop: 12,
+  emoji: {
+    fontSize: 24,
+    marginBottom: 4,
   },
   value: {
-    fontFamily: 'Poppins-Bold',
-    fontSize: 12,
-    color: '#4c4c4c',
-    marginTop: 12,
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#212121',
+    marginBottom: 2,
+    lineHeight: 28
   },
-  progressBarBackground: {
-    height: 6,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    width: '20%',
-    height: '100%',
-    backgroundColor: '#FFCC00',
-    borderRadius: 5,
+  label: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#7C7D82',
   },
 });
 

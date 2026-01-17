@@ -96,8 +96,23 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     )
   }
 
+  const containerStyles = [
+    styles.mapContainer,
+    props.dashboard && styles.dashboardMapContainer,
+  ];
+
+  const mapStyles = [
+    styles.map,
+    props.dashboard && styles.dashboardMap,
+  ];
+
+  const actionContainerStyles = [
+    styles.customButton,
+    props.dashboard && styles.dashboardActionButton,
+  ];
+
   return (
-    <View style={styles.mapContainer}>
+    <View style={containerStyles}>
       <Text style={styles.versionText}>{appVersion}</Text>
       {showItems && (
         <Modal transparent={true} visible={true} animationType="fade">
@@ -127,7 +142,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       )}
       {location && locationForegroundPermissions?.granted ? (    
         <MapView
-          style={[styles.map]}
+          style={mapStyles}
           ref={mapRef}
           initialRegion={{
             latitude: location.coords.latitude,
@@ -207,7 +222,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       )}
 
       {!props.card && (
-        <View style={styles.customButton}>
+        <View style={actionContainerStyles}>
           
           <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
         </View>
@@ -267,8 +282,22 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   customButton: {
-    bottom: 80,
-    marginHorizontal: 16,
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
+  dashboardMapContainer: {
+    borderWidth: 0,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: '#E8F4EC',
+  },
+  dashboardMap: {
+    borderRadius: 28,
+  },
+  dashboardActionButton: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
   buttonContent: {
     flexDirection: 'row',

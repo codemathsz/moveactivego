@@ -43,8 +43,7 @@ const CustomButton = ({
     styles.button,
     type === 'secondary' && styles.secondaryButton,
     type === 'gray' && styles.grayButton,
-    !title && styles.iconOnlyButton, 
-    style,
+    !title && styles.iconOnlyButton,
   ];
 
   const textStyles = [
@@ -99,9 +98,9 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius:   18,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',

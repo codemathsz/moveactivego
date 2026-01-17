@@ -1,17 +1,19 @@
 // TopBar.js
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import IconFeather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { getUnreadNotifications, getUser, markReadNotifications } from '../apis/user.api';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../contexts/ProfileContext';
 import { colors } from '../constants/Screen';
+import ProfileImage from './profileImage';
 
 const TopBar = ({ navigation }: any) => {
   const { user, jwt } = useAuth();
   const { profile } = useProfile();
-  const [name, setName] = useState<string>('Teste');
+  const [name, setName] = useState<string>('Leandro');
   const [not, setNot] = useState<number>(0);
+  const [currentDate, setCurrentDate] = useState<string>('');
 
   const fetchUserInfo = async () => {
     try {
@@ -30,8 +32,21 @@ const TopBar = ({ navigation }: any) => {
     }
   };
 
+  const getFormattedDate = () => {
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    
+    const now = new Date();
+    const dayName = days[now.getDay()];
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = months[now.getMonth()];
+    
+    return `${dayName}, ${day} ${month}`;
+  };
+
   useEffect(() => {
     fetchUserInfo();
+    setCurrentDate(getFormattedDate());
   }, []);
 
   const updateNot = async () => {
@@ -43,39 +58,28 @@ const TopBar = ({ navigation }: any) => {
     }
   }
 
-
-
   return (
     <View style={styles.container}>
-
       <View style={styles.leftContainer}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => navigation.openDrawer()}
-        >
-          <IconFeather
-            name={'menu'}
-            size={24}
-            color={colors.primary}
-          />
-        </TouchableOpacity>
-
-        <Text>
-          <Text style={styles.title}>Olá, </Text>
-          <Text style={styles.name}>{name}</Text>
-        </Text>
+        <ProfileImage size={56} style={{ marginRight: 12 }} />
+        
+        <View>
+          <Text style={styles.greeting}>Olá {name}</Text>
+          <Text style={styles.date}>{currentDate}</Text>
+        </View>
       </View>
 
-      {/* <TouchableOpacity
+      <TouchableOpacity
         style={styles.notificationButton}
-        onPress={() => { navigation.navigate('Notificações'), updateNot() }}
+        onPress={() => { /* navigation.navigate('Notificações'), updateNot() */ }}
       >
-        <Ionicons name="notifications-outline" size={24} color={colors.primary} />
-        <View style={styles.notificationBadge}>
-          <Text style={styles.notificationBadgeText}>{not}</Text>
-        </View>
-      </TouchableOpacity> */}
-
+        <Ionicons name="notifications-outline" size={28} color="#4c4c4c" />
+        {not > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationBadgeText}>{not}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -85,45 +89,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 24,
-    paddingHorizontal: 32,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
-  },
-  menuButton: {
-    marginRight: 16,
   },
   leftContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
-  title: {
+  greeting: {
     fontSize: 14,
-    fontFamily: 'Poppins-Regular',
-    color: '#4c4c4c',
+    fontFamily: 'Inter',
+    color: '#898996',
+    fontWeight: '400',
   },
-  name: {
-    fontSize: 16,
-    fontFamily: 'Poppins-Bold',
-    color: '#4c4c4c',
+  date: {
+    fontSize: 18,
+    fontFamily: 'Inter',
+    fontWeight: '600',
+    color: '#373743',
+    marginTop: 2,
   },
   notificationButton: {
-    // Add styles if needed
+    position: 'relative',
+    padding: 8,
   },
   notificationBadge: {
     backgroundColor: '#ff3355',
     position: 'absolute',
-    right: -6,
-    top: -3,
-    borderRadius: 16,
-    width: 16,
-    height: 16,
+    right: 6,
+    top: 6,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingHorizontal: 4,
   },
   notificationBadgeText: {
     color: '#fff',
     fontSize: 10,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   }
 });
 
