@@ -8,10 +8,10 @@ interface CountdownScreenProps {
 const CountdownScreen = ({ onComplete }: CountdownScreenProps) => {
   const [count, setCount] = useState(3);
   const rotation1 = useRef(new Animated.Value(0)).current;
-  const rotation2 = useRef(new Animated.Value(0)).current;
+  const rotation2 = useRef(new Animated.Value(0.5)).current;
 
   useEffect(() => {
-    // Animação dos círculos
+    // Animação do primeiro círculo
     Animated.loop(
       Animated.timing(rotation1, {
         toValue: 1,
@@ -20,9 +20,10 @@ const CountdownScreen = ({ onComplete }: CountdownScreenProps) => {
       })
     ).start();
 
+    // Animação do segundo círculo (começa de 0.5 para estar defasado)
     Animated.loop(
       Animated.timing(rotation2, {
-        toValue: 1,
+        toValue: 1.5,
         duration: 1500,
         useNativeDriver: true,
       })
@@ -113,11 +114,13 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     borderTopColor: '#278E50',
     borderRightColor: '#278E50',
+    zIndex: 1,
   },
   semicircleWhite: {
     borderColor: 'transparent',
     borderBottomColor: '#FFFFFF',
     borderLeftColor: '#FFFFFF',
+    zIndex: 2,
   },
   countText: {
     fontSize: 128,

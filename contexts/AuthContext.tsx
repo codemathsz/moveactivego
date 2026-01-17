@@ -131,15 +131,14 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   };
 
   const logout = async () => {
-    console.log("aaa");
-
-    if(!jwt) return
-    console.log("a");
-    
-    const responseLogout = await logoutApi(jwt);
-    
-    if(responseLogout.success){
-      console.log("logout");
+    try {
+      if (jwt) {
+        await logoutApi(jwt);
+      }
+    } catch (error) {
+      console.error("Erro ao fazer logout na API:", error);
+    } finally {
+      // Sempre limpar os dados locais, independente do erro da API
       setUser(null);
       await AsyncStorage.removeItem('token');
       setJwt(null);

@@ -9,6 +9,87 @@ import { useAuth } from '@/contexts/AuthContext';
 import CustomButton from './customButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const darkMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+  {
+    featureType: "administrative.locality",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "geometry",
+    stylers: [{ color: "#263c3f" }],
+  },
+  {
+    featureType: "poi.park",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#6b9a76" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{ color: "#38414e" }],
+  },
+  {
+    featureType: "road",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#212a37" }],
+  },
+  {
+    featureType: "road",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#9ca5b3" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry",
+    stylers: [{ color: "#746855" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "geometry.stroke",
+    stylers: [{ color: "#1f2835" }],
+  },
+  {
+    featureType: "road.highway",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#f3d19c" }],
+  },
+  {
+    featureType: "transit",
+    elementType: "geometry",
+    stylers: [{ color: "#2f3948" }],
+  },
+  {
+    featureType: "transit.station",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#d59563" }],
+  },
+  {
+    featureType: "water",
+    elementType: "geometry",
+    stylers: [{ color: "#17263c" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.fill",
+    stylers: [{ color: "#515c6d" }],
+  },
+  {
+    featureType: "water",
+    elementType: "labels.text.stroke",
+    stylers: [{ color: "#17263c" }],
+  },
+];
+
 const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, initialLocation?: any, skill?: any[] }) => {
   const { 
     location,
@@ -56,7 +137,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         },
-        zoom: 60,
+        zoom: 17,
       });
     }
   },[location])
@@ -71,16 +152,6 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     return () => locationSubscription?.remove()
     
   },[locationForegroundPermissions])
-
-  useEffect(() =>{
-    (async () =>{
-      const isRunningData = await AsyncStorage.getItem('isRunningAsyncStorage');
-      const { isRunning } = JSON.parse(isRunningData || '{}');
-      if(isRunning){
-        return navigation.navigate('Run' as never);
-      }
-    })
-  },[])
 
   useFocusEffect(
     useCallback(() => {
@@ -151,6 +222,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
             longitudeDelta: 0.005
           }}
           showsMyLocationButton
+          customMapStyle={!props.dashboard ? darkMapStyle : undefined}
         >
           {
             location && (
@@ -224,7 +296,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       {!props.card && (
         <View style={actionContainerStyles}>
           
-          <CustomButton title={isRunning ? 'Corrida iniciada' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
+          <CustomButton title={isRunning ? 'Voltar para a corrida' : 'Iniciar Corrida'} onPress={() => toggleRun()} style={isRunning ? styles.buttonStop : styles.button} loading={loading} />
         </View>
       )}
     </View>

@@ -5,21 +5,28 @@ import DailyMissionCard from "@/components/DailyMissionCard";
 import ActivityModeSelector from "@/components/ActivityModeSelector";
 import CustomButton from "@/components/customButton";
 import { colors } from "@/constants/Screen";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MapArea from "@/components/mapArea";
 import { useNavigation } from "@react-navigation/native";
+import { useRun } from "@/contexts/RunContext";
 
 const DashboardScreen = () =>{
   const navigation = useNavigation<any>();
+  const { isRunning } = useRun();
 
   const handleStartRun = () => {
-    // Navegar para a tela de corrida
-    navigation.navigate('Run');
+    // Se já estiver correndo, navegar para a tela de corrida
+    if (isRunning) {
+      navigation.navigate('Run');
+      return;
+    }
+    // Se não estiver correndo, a MapArea irá iniciar a corrida
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       <TopBar navigation={navigation}/>
 
       <View style={styles.statsBar}>

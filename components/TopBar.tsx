@@ -11,7 +11,7 @@ import ProfileImage from './profileImage';
 const TopBar = ({ navigation }: any) => {
   const { user, jwt } = useAuth();
   const { profile } = useProfile();
-  const [name, setName] = useState<string>('Leandro');
+  const [name, setName] = useState<string>('Corredor');
   const [not, setNot] = useState<number>(0);
   const [currentDate, setCurrentDate] = useState<string>('');
 

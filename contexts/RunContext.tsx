@@ -54,6 +54,7 @@ export interface RunContextType {
   locationSubscription: LocationSubscription | null
   isLoadingLocation: boolean
   initializeLocation: () => void
+  finishedRunData: IResponseFinishRun | null
 }
 
 export type RoutesType ={
@@ -191,6 +192,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
   const appState = useRef(AppState.currentState);
   const [locationForegroundPermissions, requestLocationForegroundPermissions] = useForegroundPermissions()
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(true)
+  const [finishedRunData, setFinishedRunData] = useState<IResponseFinishRun | null>(null)
 
   const fetchCity = async (latitude: number, longitude: number): Promise<string> => {
     try {
@@ -303,6 +305,7 @@ export const RunProvider = ({children}: RunProviderProps) => {
     setHasSpawnedReward(false);
     startWatchingPosition();
     console.log("Corrida iniciada com sucesso!");
+    
     navigation.navigate('Run');
   };
 
@@ -332,87 +335,168 @@ export const RunProvider = ({children}: RunProviderProps) => {
   };
 
 
-  const stopRun = async ():Promise<void>  => {
-    if(!jwt) return
-    setStopingRun(true)
-    setLoading(true)
+  const stopRun = async (): Promise<void> => {
+    if (!jwt) {
+      console.error('JWT não disponível');
+      return;
+    }
 
-    let routes = routesToSend.filter(r => r && r.latitude && r.longitude);
-  
+    // Prevenir múltiplas chamadas simultâneas
+    if (stopingRun) {
+      console.log('Já está finalizando uma corrida');
+      return;
+    }
+
     try {
-      const currentLocation = await getCurrentPositionAsync({
-        accuracy: Accuracy.Highest,
-      });
-      console.log("currentLocation: ",currentLocation);
-      console.log("routes: ",routes);
+      setStopingRun(true);
 
-      
-      const currentCoord = {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
-        speed: currentLocation.coords?.speed! > 0 ? Number(currentLocation.coords.speed) : 0,
-        timestamp: formatDateToISO(currentLocation.timestamp),
-        distance: routes?.length > 0 ? calculateDistance(
-          currentLocation.coords.latitude, 
-          currentLocation.coords.longitude,
-          routes[routes.length - 1].latitude,
-          routes[routes.length - 1].longitude
-        ) : 0
-      };
+      // 1. CAPTURAR DADOS ANTES DE QUALQUER LIMPEZA
+      const currentRunId = run?.id;
+      const currentCalories = calories;
+      const currentRoutes = [...routesToSend].filter(r => r?.latitude && r?.longitude);
 
-      const lastInRoutes = routes[routes.length - 1];
-
-      const isSameLocation = (a: typeof currentCoord, b: typeof currentCoord, threshold = 0.00005) => {
-        if (!b) return false;
-        return (
-          Math.abs(a.latitude - b.latitude) < threshold &&
-          Math.abs(a.longitude - b.longitude) < threshold
-        );
-      };
-
-      const isAlreadyInRoutes = isSameLocation(currentCoord, lastInRoutes);
-
-      if (!isAlreadyInRoutes) {
-        routes.push(currentCoord);
+      if (!currentRunId) {
+        throw new Error('ID da corrida não encontrado');
       }
-      
-      let finishRunDTO: RunFinishDTO = {
-        end_date: formatDateToISO(new Date()),
-        calories: calories!,
-        routes: routes
-      }
-      const response = await finishRun(jwt, run?.id!,finishRunDTO)
-      
-      if(response.success){
-        await AsyncStorage.removeItem('isRunningAsyncStorage');
-        clearRun()
-        
-        startWatchingPosition()
-        setIsRunning(false);
-        setLoading(false)
-        setFirstRouteCoordinates(null)
 
-        navigation.navigate('freeRun', { 
-          distance: response?.data?.run?.distance ?? 0, 
-          calories: response?.data?.run?.calories ?? 0,
-          duration: response?.data?.run?.duration ?? 0,              
-          max_speed: response?.data?.run?.max_speed ?? 0,
-          min_speed: response?.data?.run?.min_speed ?? 0,
-          avg_speed: response?.data?.run?.avg_speed ?? 0,
-          allRoutes: response?.data?.run?.routes ?? [],
-          firstRouteCoordinates: response?.data?.run?.routes[0] ?? [],
-          lastRouteCoordinates: response?.data?.run?.routes[response?.routes?.length - 1] ?? []
+      console.log('Finalizando corrida ID:', currentRunId);
+      console.log('Total de rotas:', currentRoutes.length);
+
+      // 2. OBTER POSIÇÃO FINAL (se possível)
+      let finalLocation = null;
+      try {
+        finalLocation = await getCurrentPositionAsync({
+          accuracy: Accuracy.Highest,
+        });
+        console.log('Posição final capturada:', finalLocation);
+      } catch (error) {
+        console.warn('Não foi possível obter posição final:', error);
+      }
+
+      // 3. ADICIONAR COORDENADA FINAL (se necessário)
+      if (finalLocation && currentRoutes.length > 0) {
+        const lastRoute = currentRoutes[currentRoutes.length - 1];
+        const finalCoord = {
+          latitude: finalLocation.coords.latitude,
+          longitude: finalLocation.coords.longitude,
+          speed: finalLocation.coords.speed ? Math.max(0, finalLocation.coords.speed) : 0,
+          timestamp: formatDateToISO(finalLocation.timestamp),
+          distance: calculateDistance(
+            finalLocation.coords.latitude,
+            finalLocation.coords.longitude,
+            lastRoute.latitude,
+            lastRoute.longitude
+          )
+        };
+
+        // Verificar se não é a mesma posição
+        const distanceThreshold = 0.00005; // ~5 metros
+        const isDifferentPosition = 
+          Math.abs(finalCoord.latitude - lastRoute.latitude) > distanceThreshold ||
+          Math.abs(finalCoord.longitude - lastRoute.longitude) > distanceThreshold;
+
+        if (isDifferentPosition) {
+          currentRoutes.push(finalCoord);
+        }
+      }
+
+      // 4. GARANTIR PELO MENOS UMA COORDENADA
+      if (currentRoutes.length === 0 && firstRouteCoordinates) {
+        currentRoutes.push({
+          latitude: firstRouteCoordinates.latitude,
+          longitude: firstRouteCoordinates.longitude,
+          speed: 0,
+          timestamp: formatDateToISO(new Date()),
+          distance: 0
         });
       }
 
-      setLoading(false)
-      setStopingRun(false)
+      // 5. PREPARAR DTO
+      const finishRunDTO: RunFinishDTO = {
+        end_date: formatDateToISO(new Date()),
+        calories: currentCalories || 0,
+        routes: currentRoutes
+      };
+
+      console.log('Enviando dados para API:', finishRunDTO);
+
+      // 6. CHAMAR API
+      const response = await finishRun(jwt, currentRunId, finishRunDTO);
+      console.log('Resposta da API:', response);
+
+      // 7. VERIFICAR SUCESSO
+      if (!response?.success) {
+        throw new Error(response?.message || 'Falha ao finalizar corrida');
+      }
+
+      // 8. EXTRAIR DADOS DA CORRIDA
+      const runData = response.data?.run || response.run;
+      if (!runData) {
+        console.warn('Dados da corrida não retornados pela API');
+      }
+
+      // 9. SALVAR DADOS FINALIZADOS PRIMEIRO
+      console.log('Salvando dados da corrida finalizada...');
+      if (runData) {
+        setFinishedRunData(runData);
+      }
+
+      // 10. NAVEGAR PARA RESUMO IMEDIATAMENTE
+      console.log('Navegando para tela de resumo...');
+      navigation.navigate('RunSummary' as never);
+
+      // 11. LIMPAR ESTADOS E STORAGE EM PARALELO (após navegação)
+      console.log('Limpando estados em background...');
       
-    } catch (error) {
-      console.log('Erro ao pegar localização final:', error);
-    } finally{
-      setLoading(false)
-      setStopingRun(false)
+      // Executar limpezas em paralelo sem bloquear
+      Promise.allSettled([
+        AsyncStorage.removeItem('isRunningAsyncStorage'),
+        stopLocationTask().catch(err => console.warn('Erro ao parar location task:', err)),
+        removeStorageLocation().catch(err => console.warn('Erro ao remover storage:', err))
+      ]).then(() => console.log('Limpeza completa'));
+
+      // Limpar timer imediatamente
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      // Reset de variáveis globais
+      accumulatedDistance = 0;
+      lastRouteCoordinates = null;
+
+      // Reset de estados (executar em paralelo com as outras operações)
+      setDistance(0);
+      setCalories(0);
+      setFormattedTimer('');
+      setTimer(0);
+      setRouteCoordinates([]);
+      setRun(null);
+      setRoutesToSend([]);
+      setSpawnedBox(null);
+      setHasSpawnedReward(false);
+      setHasOpeningBox(true);
+      setShowItems(false);
+      setSpawnedBoxItems([]);
+      setIsRunning(false);
+      setFirstRouteCoordinates(null);
+      setStopingRun(false);
+
+      // Reiniciar observação de posição após um delay
+      setTimeout(() => {
+        startWatchingPosition();
+      }, 500);
+
+    } catch (error: any) {
+      console.error('Erro ao finalizar corrida:', error);
+      
+      setStopingRun(false);
+      
+      Alert.alert(
+        'Erro ao Finalizar',
+        error?.message || 'Não foi possível finalizar a corrida. Tente novamente.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -787,11 +871,18 @@ export const RunProvider = ({children}: RunProviderProps) => {
         startWatchingPosition,
         locationSubscription,
         isLoadingLocation,
-        initializeLocation
+        initializeLocation,
+        finishedRunData
       }}>
       {children}
     </RunContext.Provider>
   );
 };
 
-export const useRun = () => useContext(RunContext);
+export const useRun = () => {
+  const context = useContext(RunContext);
+  if (!context) {
+    throw new Error('useRun deve ser usado dentro de um RunProvider');
+  }
+  return context;
+};

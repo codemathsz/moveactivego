@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: Fonts.inter.bold,
     fontSize: 20,
-    lineHeight: 24,
+    lineHeight: 18,
   },
   primaryText: {
     color: WHITE,

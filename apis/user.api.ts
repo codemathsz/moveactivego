@@ -220,13 +220,15 @@ export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) 
     const response = await axiosInstanceAuthoraized(token).post(`/run/finish/${runId}`, dto);
     return response.data;
   } catch (error: any) {
-    console.log(error);
-    await sendLogGrafana('STOP_RUN: '+  error)
-    Alert.alert(
-      "Erro",
-      JSON.stringify(error.response.data, null, 2) // Adiciona espaçamento para formatar o JSON
-    );
-    throw new Error(error.response.data.message);
+    console.log('Erro ao finalizar corrida na API:', error);
+    await sendLogGrafana('STOP_RUN: '+  error);
+    
+    // Retornar erro tratado sem bloquear o fluxo
+    return {
+      success: false,
+      message: error?.response?.data?.message || 'Erro ao finalizar corrida',
+      error: error
+    };
   }
 }
 

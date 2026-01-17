@@ -157,7 +157,7 @@ const LoginScreen = () => {
                   secureTextEntry={!showPassword}
                 />
               </View>
-              <View>  
+              <View style={styles.inputContainer}>  
                 <CustomButton
                   title='Entrar' 
                   onPress={() => handleLoginPress()} 

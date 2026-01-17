@@ -12,6 +12,7 @@ import LoginScreen from './login';
 import ResetPassword from './resetPassword';
 import FreeRun from './freeRun';
 import RunScreen from './run';
+import RunSummaryScreen from './runSummary';
 import DashboardScreen from './dashboard';
 import Sidebar from '@/components/sidebar';
 import VerificationScreen from './verification';
@@ -84,6 +85,11 @@ function LoggedInStackScreen() {
       <LoggedInStack.Screen
         name="Run"
         component={RunScreen}
+        options={{ ...screens.withoutHeader } as any}
+      />
+      <LoggedInStack.Screen
+        name="RunSummary"
+        component={RunSummaryScreen}
         options={{ ...screens.withoutHeader } as any}
       />
       <LoggedInStack.Screen
