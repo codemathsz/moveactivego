@@ -20,10 +20,8 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
-      },
-      "env": {
-        "EXPO_NO_CAPABILITY_SYNC": "1"
       }
+
     }
   },
   "submit": {

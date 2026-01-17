@@ -4,7 +4,7 @@
     "slug": "moveactivego",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
@@ -26,7 +26,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo-white.png",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#278e50"
       },
       "permissions": [
