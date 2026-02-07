@@ -62,18 +62,14 @@ const ActivitiesScreen = () => {
 
 	return (
 		<View style={styles.root}>
-			<View style={styles.headerContainer}>
-				<Text style={styles.headerLabel}>Data</Text>
-				<Text style={styles.headerLabel}>Local</Text>
-				<Text style={styles.headerLabel}>Calorias</Text>
-				<Text style={styles.headerLabel}>Distância</Text>
-			</View>
+			<Text style={styles.title}>Atividades Recentes</Text>
+			
             <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
                 {
                 loading ?  (
                     <ActivityIndicator size="large" color={ styles.primaryText.color} style={{marginTop: 21}} />
                 ) : (
-                    <View style={{ gap: 16, marginTop: 16 }}>
+                    <View style={styles.activitiesContainer}>
                         {activities.map((activitie, index) => (
                             <TouchableOpacity key={index} onPress={() => {
                                 handlePress(activitie)
@@ -104,7 +100,20 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: colors.background,
 		paddingHorizontal: 16,
-		paddingTop: 14
+		paddingTop: 20
+	},
+	title: {
+		fontSize: 18,
+		fontFamily: 'Poppins-Bold',
+		color: '#000000',
+		marginBottom: 16,
+		textAlign: 'center',
+	},
+	activitiesContainer: {
+		backgroundColor: '#FFFFFF',
+		borderRadius: 8,
+		overflow: 'hidden',
+		marginTop: 16,
 	},
 	headerContainer: {
 		flexDirection: 'row',
