@@ -115,8 +115,7 @@ function LoggedInStackScreen() {
         name='Inventory'
         component={InventoryScreen}
         options={{
-          ...screens.withHeader,
-          title: "Inventário",
+          headerShown: false,
         } as any}
       />
       <LoggedInStack.Screen

@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
-    FlatList,
+    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -14,9 +14,6 @@ import * as commonStyles from '../../constants/common';
 import { getInventoryUserItems } from '../../apis/user.api';
 import { useAuth } from '../../contexts/AuthContext';
 import NavigationBar from '@/components/navigationBar';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { Items } from '@/contexts/RunContext';
-import InventoryDetails from '@/components/InventoryDetails';
 
 export const RARITY_ENUM: any = {
     COMMON: 'Comum',
@@ -29,62 +26,21 @@ export const RARITY_ENUM: any = {
 const InventoryScreen = () => {
     const navigation = useNavigation<any>();
     const { user, jwt } = useAuth();
-    const [loading, setLoading] = useState<boolean>(false)
-    const [inventoryItems, setInventoryItems] = useState<Items[]>([])
-
-    const getInventoryList = async () => {
-        try {
-            if (jwt) {
-                setLoading(true)
-                const response = await getInventoryUserItems(jwt);
-                if(response.success){
-                    setInventoryItems(response.data.items)
-                }
-                setLoading(false)
-            } else {
-                console.error("Token JWT é nulo.");
-            }
-        } catch (error) {
-            console.error("Erro ao buscar inventário:", error);
-        }
-    };
-
-    const handlePress = (item: Items) => {
-        navigation.navigate('ItemDetails', item);
-    };
-
-    useEffect(() => {
-        getInventoryList()
-    }, []);
+    const [loading, setLoading] = useState<boolean>(false);
 
     return (
         <View style={styles.root}>
-            {
-                loading ?  (
-                <ActivityIndicator size="large" color={ styles.primaryText.color} style={{marginTop: 21}} />
-            ) : (
-                <FlatList
-                    data={inventoryItems}
-                    numColumns={1} // Exibe dois itens por linha
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.itemContainer} onPress={() => handlePress(item)}>
-                            <InventoryDetails item={item} />
-                        </TouchableOpacity>
-                    )}
-                    ListEmptyComponent={() => (
-                        <View style={styles.emptyContainer}>
-                            <Ionicons
-                                name="information-circle"
-                                size={20}
-                                color="#555"
-                            />
-                            <Text style={styles.emptyText}>Nenhum item no inventário.</Text>
-                        </View>
-                    )}
-                />
-            )
-            }
+            {/* Header Personalizado */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+                    <Image 
+                        source={require('@/assets/icons/arrow-right.png')} 
+                        style={styles.backIcon} 
+                    />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Inventário</Text>
+                <View style={styles.headerButton} />
+            </View>
 
             <View style={styles.navigationBar}>
                 <NavigationBar />
@@ -97,8 +53,32 @@ const styles = StyleSheet.create({
     root: {
         flex: 1,
         backgroundColor: colors.background,
+        paddingTop: 10,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingTop: 14
+        paddingVertical: 12,
+        backgroundColor: colors.background,
+    },
+    headerButton: {
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    backIcon: {
+        width: 24,
+        height: 24,
+        transform: [{ rotate: '180deg' }],
+        tintColor: '#000000',
+    },
+    headerTitle: {
+        fontSize: 16,
+        fontFamily: 'Inter-SemiBold',
+        color: '#040415',
     },
     headerContainer: {
         flexDirection: 'row',
@@ -110,7 +90,7 @@ const styles = StyleSheet.create({
     headerLabel: {
         flex: 1,
         fontSize: 12,
-        fontFamily: 'Poppins-Bold',
+        fontFamily: 'Inter-SemiBold',
         color: '#888888',
     },
     balanceCard: {
@@ -157,57 +137,6 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-    },
-    actionLabel: {},
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#E0E0E0',
-        backgroundColor: '#F3F3F6'
-    },
-    column: {
-        flex: 1,
-        justifyContent: 'center',
-        display: 'flex',
-        alignItems: 'center'
-    },
-    startColumn: {
-        flex: 1,
-    },
-    endColumn: {
-        flex: 1,
-        justifyContent: 'center',
-        display: 'flex',
-        alignItems: 'flex-end'
-    },
-    value: {
-        fontSize: 14,
-        fontFamily: 'Poppins-Medium',
-        color: '#888888',
-    },
-    itemContainer: {
-        flex: 1,
-        marginVertical: 8, // Adiciona espaçamento entre os itens
-        padding: 2, // Dá um pouco de respiro visual
-        alignItems: "center",
-        backgroundColor: "#FFF",
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        display: 'flex',
-        flexDirection: 'row',
-        gap: 8,
-        padding: 20,
-    },
-    emptyText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#555',
     },
 });
 
