@@ -100,12 +100,9 @@ function LoggedInStackScreen() {
       <LoggedInStack.Screen
         name='Profile'
         component={ProfileScreen}
-        options={
-          {
-            ...screens.withHeader,
-            title: "Meu Perfil",
-          } as any
-        }
+        options={{
+          headerShown: false,
+        } as any}
       />
       <LoggedInStack.Screen
         name='Activities'

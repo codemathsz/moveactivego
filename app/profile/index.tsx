@@ -1,24 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { Suspense, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../constants/Screen';
-import { getUser, getUserTotalInfo } from '../../apis/user.api';
+import { getUser } from '../../apis/user.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import ProfileImage from '@/components/profileImage';
-import PersonalStat from '@/components/PersonalStat';
 import NavigationBar from '@/components/navigationBar';
-
-
-const Badge = () => (
-  <LinearGradient
-    colors={['#0BB974', '#038D78']}
-    start={{ x: 0, y: 0 }}
-    end={{ x: 0, y: 1 }}
-    style={styles.badge}
-  />
-);
 
 const ProfileScreen = () => {
   const { profile } = useProfile();
@@ -61,70 +50,137 @@ const ProfileScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView style={{ flex: 1 }}>
+      {/* Header Personalizado */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerButton}>
+          <Image 
+            source={require('@/assets/icons/arrow-right.png')} 
+            style={styles.backIcon} 
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Meu Perfil</Text>
+        <TouchableOpacity style={styles.headerButton}>
+          <Ionicons name="settings-outline" size={20} color="#373743" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <View style={styles.root}>
-            <ProfileImage size={96} style={{}} />
+            {/* Foto de Perfil */}
+            <ProfileImage size={112} style={{ marginTop: 8 }} />
+            
+            {/* Nome */}
             <Text style={styles.nameText}>{name}</Text>
-            <Text style={styles.levelText}>Level {userInfo?.level ?? profile.level}</Text>
-            {/* 
-            <View style={styles.badgeContainer}>
-              <Badge />
-              <Badge />
-              <Badge />
-              <Badge />
-            </View> */}
-
-            <View style={styles.personalStatContainer}>
-              <PersonalStat
-                icon={require('../../assets/icons/total-time-icon.png')}
-                value={convertTime(userTotalDuration ?? 0)}
-                color="#FC457B"
-                description={'Horas'}
+            
+            {/* Level com ícone */}
+            <View style={styles.levelContainer}>
+              <Image 
+                source={require('@/assets/icons/award.png')}
+                style={{ width: 16, height: 20 }} 
               />
-              <PersonalStat
-                icon={require('../../assets/icons/total-distance-icon.png')}
-                value={String(userTotalDistance?.toFixed(2) ?? 0)}
-                color="#FFB905"
-                description={'Quilômetros'}
-              />
-              <PersonalStat
-                icon={require('../../assets/icons/total-calories-icon.png')}
-                value={String(userTotalCalories ?? 0)}
-                color="#248E00"
-                description={'Calorias'}
-              />
-              <PersonalStat
-                icon={require('../../assets/icons/total-runs-icon.png')}
-                value={String(userTotalRuns ?? 0)}
-                color="#006FDD"
-                description={'Corridas'}
-              />
+              <Text style={styles.levelText}>Level {userInfo?.level ?? profile.level}</Text>
             </View>
 
-            <View style={styles.profileButtonsContainer}>
-              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Friends')}>
-                <Image source={require('../../assets/images/soquinho.png')} resizeMode="contain" />
-                <Text style={styles.buttonText}>Amigos</Text>
-              </TouchableOpacity> */}
-              <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Activities')}>
-                <Image source={require('../../assets/images/atividade.png')} resizeMode="contain" />
-                <Text style={styles.buttonText}>Atividade</Text>
-              </TouchableOpacity>
-              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Scoreboard')}>
-                <Image source={require('../../assets/images/placar.png')} resizeMode="contain" />
-                <Text style={styles.buttonText}>Placar</Text>
-              </TouchableOpacity> */}
-              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Achievments')}>
-                <Image source={require('../../assets/images/conquista.png')} resizeMode="contain" />
-                <Text style={styles.buttonText}>Conquistas</Text>
-              </TouchableOpacity> */}
+            {/* Grid de Estatísticas 2x2 */}
+            <View style={styles.statsGrid}>
+              {/* Linha 1 */}
+              <View style={styles.statsRow}>
+                {/* Calorias */}
+                <View style={styles.statCard}>
+                  <View style={styles.statHeader}>
+                    <Text style={styles.statLabel}>Calorias</Text>
+                    <View style={styles.iconContainer}>
+                      <Image 
+                        source={require('../../assets/images/fire.png')} 
+                        style={{ width: 24, height: 24 }} 
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>
+                    {Number(userTotalCalories ?? 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                  </Text>
+                  <Text style={styles.statUnit}>kcal</Text>
+                </View>
+
+                {/* Quilômetros */}
+                <View style={styles.statCard}>
+                  <View style={styles.statHeader}>
+                    <Text style={styles.statLabel}>Quilômetros</Text>
+                    <View style={styles.iconContainer}>
+                      <Image 
+                        source={require('@/assets/images/shoe-run.png')}
+                        style={{ width: 24, height: 24 }} 
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>
+                    {Number(userTotalDistance ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </Text>
+                  <Text style={styles.statUnit}>km</Text>
+                </View>
+              </View>
+
+              {/* Linha 2 */}
+              <View style={styles.statsRow}>
+                {/* Corridas */}
+                <View style={styles.statCard}>
+                  <View style={styles.statHeader}>
+                    <Text style={styles.statLabel}>Corridas</Text>
+                    <View style={styles.iconContainer}>
+                      <Image 
+                        source={require('../../assets/images/steps.png')} 
+                        style={{ width: 24, height: 24 }} 
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>{userTotalRuns ?? 0}</Text>
+                  <Text style={styles.statUnit}>Total</Text>
+                </View>
+
+                {/* Horas */}
+                <View style={styles.statCard}>
+                  <View style={styles.statHeader}>
+                    <Text style={styles.statLabel}>Horas</Text>
+                    <View style={styles.iconContainer}>
+                      <Image 
+                        source={require('../../assets/icons/time-gray.png')} 
+                        style={{ width: 24, height: 24 }} 
+                      />
+                    </View>
+                  </View>
+                  <Text style={styles.statValue}>{convertTime(userTotalDuration ?? 0)}</Text>
+                  <Text style={styles.statUnit}>Percorridas</Text>
+                </View>
+              </View>
             </View>
-            <View style={styles.profileButtonsContainer}>
-              {/* <TouchableOpacity style={styles.profileButton} onPress={() => navigation.navigate('Goals')}>
-                <Image source={require('../../assets/images/objetivo.png')} resizeMode="contain" />
-                <Text style={styles.buttonText}>Objetivos</Text>
-              </TouchableOpacity>
-              <View style={{ width: '27.5%' }}></View> */}
+
+            {/* Seção Suas Conquistas */}
+            <View style={styles.achievementsSection}>
+              <View style={styles.achievementsHeader}>
+                <Text style={styles.achievementsTitle}>Suas conquistas</Text>
+                <TouchableOpacity>
+                  <Text style={styles.seeMoreText}>Ver mais ›</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.achievementsGrid}>
+                {[
+                  { id: 1, icon: require('../../assets/icons/special.png') },
+                  { id: 2, icon: require('../../assets/icons/beach-ready.png') },
+                  { id: 3, icon: require('../../assets/icons/full-body.png') },
+                  { id: 4, icon: require('../../assets/icons/challenge.png') }
+                ].map((item) => (
+                  <View key={item.id} style={styles.achievementItem}>
+                    <View style={styles.achievementIcon}>
+                      <Image 
+                        source={item.icon} 
+                        style={{ width: 48, height: 48 }} 
+                      />
+                    </View>
+                    <Text style={styles.achievementLabel}>Conquista {item.id}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           </View>
       </ScrollView>
@@ -136,79 +192,147 @@ const ProfileScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.background,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backIcon: {
+    width: 20,
+    height: 20,
+    transform: [{ rotate: '180deg' }],
+    tintColor: '#000000',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#040415',
+  },
   root: {
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
     backgroundColor: colors.background,
-    paddingVertical: 16,
-    paddingBottom: 90
+    paddingHorizontal: 16,
+    paddingBottom: 100,
   },
   nameText: {
-    fontSize: 16,
-    fontFamily: 'Poppins-Bold',
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
     textAlign: 'center',
-    color: colors.textPrimary,
-    marginTop: 14
+    color: '#040415',
+    marginTop: 16,
+  },
+  levelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
   },
   levelText: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    textAlign: 'center',
-    color: colors.textPrimary,
+    fontSize: 15,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
   },
-  badge: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 48,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    gap: 16,
-    marginVertical: 16,
-  },
-  personalStatContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  statsGrid: {
     width: '100%',
-    backgroundColor: '#ffffff',
+    marginTop: 24,
+    gap: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    gap: 32,
-    marginVertical: 16,
+    borderWidth: 1,
+    borderColor: '#E6E6E8',
   },
-  profileButtonsContainer: {
+  statHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
+  },
+  statLabel: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#373743',
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontFamily: 'Inter-Bold',
+    color: '#373743',
+    marginBottom: 2,
+  },
+  statUnit: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#898996',
+  },
+  achievementsSection: {
     width: '100%',
+    marginTop: 32,
+  },
+  achievementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  profileButton: {
-    width: '27.5%',
-    height: 126,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
+  achievementsTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
+    color: '#373743',
   },
-  buttonText: {
+  seeMoreText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#7C7D82',
+  },
+  achievementsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  achievementItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  achievementIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: '#ECF8ED',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  achievementLabel: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    fontWeight: '600',
+    fontFamily: 'Inter-SemiBold',
+    color: '#373743',
     textAlign: 'center',
-    color: colors.textPrimary,
-    letterSpacing: 0.3,
-    marginTop: 8,
   },
   navigationBar: {
     position: 'absolute',
