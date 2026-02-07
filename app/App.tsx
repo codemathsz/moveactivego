@@ -111,8 +111,7 @@ function LoggedInStackScreen() {
         name='Activities'
         component={ActivitiesScreen}
         options={{
-          ...screens.withHeader,
-          title: "Atividades Recentes",
+          headerShown: false,
         } as any}
       />
       <LoggedInStack.Screen

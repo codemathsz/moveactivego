@@ -35,7 +35,10 @@ const ActivitiesDetails = ({ date, time, local, calories, distance }: any) => {
         <View style={styles.infoContainer}>
           {/* Primeira linha: Corrida e Km */}
           <View style={styles.firstLine}>
-            <Text style={styles.activityType}>Corrida</Text>
+            <View style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2}}>
+              <Image source={require('../assets/icons/shoe-run-gray.png')} style={{width:20, height:20}} />
+              <Text style={styles.activityType}>Corrida</Text>
+            </View>
             <Text style={styles.distanceText}>{distance ?? 0} km</Text>
           </View>
           
@@ -43,7 +46,7 @@ const ActivitiesDetails = ({ date, time, local, calories, distance }: any) => {
           <View style={styles.secondLine}>
             <View style={styles.infoItem}>
               <Image 
-                source={require('../assets/icons/total-time-icon.png')} 
+                source={require('../assets/icons/time-gray.png')} 
                 style={styles.smallIcon} 
               />
               <Text style={styles.infoText}>{time}</Text>
@@ -51,7 +54,7 @@ const ActivitiesDetails = ({ date, time, local, calories, distance }: any) => {
             
             <View style={styles.infoItem}>
               <Image 
-                source={require('../assets/icons/total-calories-icon.png')} 
+                source={require('../assets/icons/fire-gray.png')} 
                 style={styles.smallIcon} 
               />
               <Text style={styles.infoText}>{Number(calories).toFixed(2)}</Text>
@@ -59,10 +62,10 @@ const ActivitiesDetails = ({ date, time, local, calories, distance }: any) => {
             
             <View style={styles.infoItem}>
               <Image 
-                source={require('../assets/icons/total-distance-icon.png')} 
+                source={require('../assets/icons/location-gray.png')} 
                 style={styles.smallIcon} 
               />
-              <Text style={styles.infoText}>{local || 'Vitória'}</Text>
+              <Text style={styles.infoText}>{local || 'Sem localização'}</Text>
             </View>
           </View>
         </View>
@@ -86,9 +89,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E5E5',
   },
   dateText: {
-    fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#757575',
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
     marginBottom: 8,
     paddingHorizontal: 16,
   },
@@ -98,17 +101,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   iconBox: {
-    width: 44,
-    height: 44,
+    width: 45,
+    height: 45,
     backgroundColor: '#ECF8ED',
-    borderRadius: 8,
+    paddingHorizontal: 2,
+    paddingVertical: 1,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   runIcon: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
   },
   infoContainer: {
     flex: 1,
@@ -119,15 +124,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   activityType: {
-    fontSize: 14,
-    fontFamily: 'Poppins-Medium',
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
     color: '#000000',
     marginRight: 8,
   },
   distanceText: {
     fontSize: 12,
-    fontFamily: 'Poppins-Regular',
-    color: '#757575',
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
   },
   secondLine: {
     flexDirection: 'row',
@@ -139,14 +144,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   smallIcon: {
-    width: 12,
-    height: 12,
+    width: 16,
+    height: 16,
     marginRight: 3,
   },
   infoText: {
     fontSize: 11,
-    fontFamily: 'Poppins-Regular',
-    color: '#757575',
+    fontFamily: 'Inter-Regular',
+    color: '#000000',
   },
   arrowIcon: {
     width: 18,
