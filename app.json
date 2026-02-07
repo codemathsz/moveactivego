@@ -7,16 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "ios": {
-      "supportsTablet": true,
       "bundleIdentifier": "com.app.MoveActiveGo",
-      "buildNumber": "49",
+      "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": [
-          "location",
-          "fetch"
-        ],
+        "UIBackgroundModes": ["location", "fetch"],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa acessar sua localização mesmo em segundo plano para registrar rotas durante corridas.",
         "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa acessar sua localização para mostrar mapas e rotas.",
         "NSPhotoLibraryUsageDescription": "Este aplicativo precisa acessar sua biblioteca de fotos para salvar capturas de tela feitas no aplicativo.",
@@ -25,45 +20,16 @@
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#278e50"
-      },
+      "package": "com.MoveActiveGo",
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
-        "POST_NOTIFICATIONS",
-        "FOREGROUND_SERVICE"
-      ],
-      "config": {
-        "googleMaps": {
-          "apiKey": "AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY"
-        }
-      },
-      "package": "com.MoveActiveGo"
-    },
-    "web": {
-      "bundler": "metro",
-      "favicon": "./assets/images/logo.png"
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/logo-white.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#278e50"
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
-          "isAndroidForegroundServiceEnabled": true
-        }
-      ],
+      "expo-location",
+      "expo-task-manager",
+      "expo-splash-screen",
       "expo-font",
       "expo-web-browser"
     ],
@@ -71,13 +37,9 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
         "projectId": "e05395e0-627c-439d-befe-6ebf31883daa"
       }
-    },
-    "owner": "codemathsz777"
+    }
   }
 }
