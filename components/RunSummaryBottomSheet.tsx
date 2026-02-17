@@ -269,4 +269,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RunSummaryBottomSheet;
+export default React.memo(RunSummaryBottomSheet);

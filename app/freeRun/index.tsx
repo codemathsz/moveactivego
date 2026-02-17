@@ -1,12 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
 import NavigationBar from '../../components/navigationBar';
 import FreeRunInfo, { RunStat } from '../../components/FreeRunInfo';
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
-import { RoutesType, useRun } from '../../contexts/RunContext';
+import { RoutesType } from '../../contexts/RunContext';
 import { colors } from '../../constants/Screen';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,15 +43,17 @@ const FreeRun = () => {
 
 
 
-  const routeCoordinates = allRoutes?.map(coord => ({
-    latitude: coord.latitude,
-    longitude: coord.longitude,
-    speed: coord.speed,
-    distance: coord.distance,
-    timestamp: coord.timestamp
-  }));
+  const routeCoordinates = useMemo(() => (
+    allRoutes?.map(coord => ({
+      latitude: coord.latitude,
+      longitude: coord.longitude,
+      speed: coord.speed,
+      distance: coord.distance,
+      timestamp: coord.timestamp
+    })) || []
+  ), [allRoutes]);
 
-  const onShare = async () => {
+  const onShare = useCallback(async () => {
     try {
       setImage('teste');
       setShowInfoPrint(true);
@@ -63,11 +64,6 @@ const FreeRun = () => {
       });
 
       if (uri) {
-          const base64Image = await FileSystem.readAsStringAsync(uri, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-          const dataUri = `data:image/png;base64,${base64Image}`;
-
           if (await Sharing.isAvailableAsync()) {
             await Sharing.shareAsync(uri);
           } else {
@@ -82,7 +78,7 @@ const FreeRun = () => {
       setImage('');
       setShowInfoPrint(false);
     }
-  };
+  }, []);
 
   function sampleWaypoints(points: RoutesType[], maxWaypoints = 23): RoutesType[] {
     if (points.length <= maxWaypoints) {
@@ -137,7 +133,7 @@ const FreeRun = () => {
   
 
 
-  const renderMarkers = () => {
+  const renderMarkers = useCallback(() => {
     return (
       <>
         <Marker
@@ -161,7 +157,7 @@ const FreeRun = () => {
         />
       </>
     );
-  };
+  }, [allRoutes]);
 
   function formatToMinutes(duration: string) {
     const [hours, minutes, seconds] = duration.split(":");
@@ -184,7 +180,7 @@ const FreeRun = () => {
         routeCoordinates
       )
     }
-  },[allRoutes])
+  },[routeCoordinates])
 
   useEffect(() =>{
     if (!routeCoordinates || routeCoordinates.length < 2) return;

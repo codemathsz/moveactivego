@@ -46,4 +46,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SpeedCard;
+export default React.memo(SpeedCard);

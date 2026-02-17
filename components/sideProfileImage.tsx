@@ -1,42 +1,32 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, View } from 'react-native';
-import { getUser } from '../apis/user.api';
+import { StyleSheet, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { useAuth } from '../contexts/AuthContext';
 
 const SideProfileImage = ({ size = 64, style }: any) => {
-	const { user, jwt } = useAuth();
-	const [loading, setLoading] = useState(false);
+	const { user, userTotals } = useAuth();
 	const [profilePicture, setProfilePicture] = useState(user?.profilePicture || '');
 
 	useEffect(() => {
-		if (user) {
-		  setProfilePicture(user.profilePicture || '');
-		}
-	  }, [user]);
-
-	const fetchUserInfo = async () => {
-		try {
-			if (jwt) {
-				const userInfo = await getUser(jwt);
-				setProfilePicture(userInfo.profilePicture);
-			} else {
-				console.error("Token JWT é nulo.");
-			}
-		} catch (error) {
-			console.error("Erro ao buscar informações do usuário:", error);
-		}
-	};
-
-	useEffect(() => {
-		fetchUserInfo();
-	}, []);
+		setProfilePicture(userTotals?.profilePicture || user?.profilePicture || '');
+	}, [userTotals?.profilePicture, user?.profilePicture]);
 
 	return (
 		<View style={styles.container}>
 			{profilePicture ? (
-				<Image source={{ uri: profilePicture }} style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]} />
+				<ExpoImage
+					source={{ uri: profilePicture }}
+					style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]}
+					contentFit="cover"
+					cachePolicy="memory-disk"
+				/>
 			) : (
-				<Image source={require('../assets/images/avatar-placeholder.png')} style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]} />
+				<ExpoImage
+					source={require('../assets/images/avatar-placeholder.png')}
+					style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]}
+					contentFit="cover"
+					cachePolicy="memory-disk"
+				/>
 			)}
 		</View>
 	);

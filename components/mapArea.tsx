@@ -1,13 +1,13 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, {useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import { ActivityIndicator, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import MapView, { Polyline, Marker} from 'react-native-maps';
 import { colors } from "@/constants/Screen";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRun } from '../contexts/RunContext';
+import { useRun, useRunGps } from '../contexts/RunContext';
 import { useAuth } from '@/contexts/AuthContext';
 import CustomButton from './customButton';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const darkMapStyle = [
   { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -91,30 +91,28 @@ const darkMapStyle = [
 ];
 
 const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, initialLocation?: any, skill?: any[] }) => {
-  const { 
-    location,
+  const {
     isRunning,
     startRun,
     stopRun,
-    routeCoordinates,
     mapRef,
     loading,
     spawnedBoxItems,
     showItems,
     handleCloseShowItems,
     spawnedBox,
-    firstRouteCoordinates,
     locationForegroundPermissions,
     startWatchingPosition,
-    locationSubscription,
+    stopWatchingPosition,
     isLoadingLocation,
-    initializeLocation
-  } = useRun()
+    initializeLocation,
+  } = useRun();
+  const { location, routeCoordinates, firstRouteCoordinates } = useRunGps();
   const { appVersion } = useAuth();
   
   const navigation = useNavigation<any>();
 
-  const toggleRun = async () => {
+  const toggleRun = useCallback(async () => {
     if(isRunning){
       console.log("AQQQ");
       
@@ -128,36 +126,46 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
     }else{
       await startRun() 
     }
-  };
-
-  useEffect(() =>{
-    if(location){
-      mapRef.current?.animateCamera({
-        center: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-        zoom: 17,
-      });
-    }
-  },[location])
+  }, [isRunning, startRun, stopRun, navigation, props.dashboard]);
 
   useEffect(() =>{
     if(!locationForegroundPermissions?.granted){
       return
     }
 
-    startWatchingPosition()
+    startWatchingPosition();
 
-    return () => locationSubscription?.remove()
-    
-  },[locationForegroundPermissions])
+    return () => stopWatchingPosition();
+  }, [locationForegroundPermissions, startWatchingPosition, stopWatchingPosition]);
 
   useFocusEffect(
     useCallback(() => {
       initializeLocation()
-    }, [])
+    }, [initializeLocation])
   );
+
+  const containerStyles = useMemo(() => [
+    styles.mapContainer,
+    props.dashboard && styles.dashboardMapContainer,
+  ], [props.dashboard]);
+
+  const mapStyles = useMemo(() => [
+    styles.map,
+    props.dashboard && styles.dashboardMap,
+  ], [props.dashboard]);
+
+  const actionContainerStyles = useMemo(() => [
+    styles.customButton,
+    props.dashboard && styles.dashboardActionButton,
+  ], [props.dashboard]);
+
+  const polylineCoordinates = useMemo(() => {
+    if (!routeCoordinates || routeCoordinates.length === 0) return [];
+    return routeCoordinates.map(route => ({
+      latitude: route.latitude,
+      longitude: route.longitude,
+    }));
+  }, [routeCoordinates]);
 
   if(isLoadingLocation){
     return (
@@ -166,21 +174,6 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
       </View>
     )
   }
-
-  const containerStyles = [
-    styles.mapContainer,
-    props.dashboard && styles.dashboardMapContainer,
-  ];
-
-  const mapStyles = [
-    styles.map,
-    props.dashboard && styles.dashboardMap,
-  ];
-
-  const actionContainerStyles = [
-    styles.customButton,
-    props.dashboard && styles.dashboardActionButton,
-  ];
 
   return (
     <View style={containerStyles}>
@@ -200,7 +193,12 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
                 spawnedBoxItems?.map((item) =>{
                   return (
                     <View key={item.id}>
-                      <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                      <ExpoImage
+                        source={{ uri: item.picture }}
+                        style={styles.itemImage}
+                        contentFit="cover"
+                        cachePolicy="memory-disk"
+                      />
                       <Text style={styles.itemName}>{item.name}</Text>
                       <Text style={styles.itemRarity}>{item.rarity}</Text>
                     </View>
@@ -232,6 +230,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
                   longitude: location.coords.longitude
                 }}
                 anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
               >
                 <Image
                   source={require('../assets/icons/run-icon.png')}
@@ -248,15 +247,13 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
                   latitude: firstRouteCoordinates.latitude,
                   longitude: firstRouteCoordinates.longitude
                 }}
+                tracksViewChanges={false}
               />
             )
           }
-          {isRunning && routeCoordinates && (
+          {isRunning && polylineCoordinates.length > 0 && (
             <Polyline
-              coordinates={routeCoordinates?.map(route => ({
-                latitude: route.latitude,
-                longitude: route.longitude,
-              }))}
+              coordinates={polylineCoordinates}
               strokeColor="#FF0000" 
               strokeWidth={3}
             />
@@ -270,6 +267,7 @@ const MapArea = (props: { start?: boolean, dashboard: boolean, card?: boolean, i
               title="Recompensa!"
               description="Pegue essa caixa de recompensa 🏆"
               image={require('../assets/icons/move.png')}
+              tracksViewChanges={false}
             />
           )}
         </MapView>
@@ -497,4 +495,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MapArea;
+export default React.memo(MapArea);

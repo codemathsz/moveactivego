@@ -94,4 +94,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ActivityModeSelector;
+export default React.memo(ActivityModeSelector);

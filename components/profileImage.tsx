@@ -1,34 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 import { launchImageLibrary } from 'react-native-image-picker';
-import { getUser, updateProfilePicture } from '../apis/user.api';
-import { AuthProvider, useAuth, } from '../contexts/AuthContext';
+import { updateProfilePicture } from '../apis/user.api';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProfileImage = ({ size = 64, style }: any) => {
-	const { user, jwt } = useAuth();
-	const auth = useAuth();
+	const { user, jwt, userTotals, refreshUserTotals } = useAuth();
 	const [loading, setLoading] = useState(false);
 	const [profilePicture, setProfilePicture] = useState(user?.profilePicture || "");
 
-	const fetchUserInfo = async () => {
-		try {
-			if (jwt) {
-				const userInfo = await getUser(jwt);
-				setProfilePicture(userInfo.profilePicture);
-				
-				auth.updateProfile(jwt);
-				
-			} else {
-				console.error("Token JWT é nulo.");
-			}
-		} catch (error) {
-			console.error("Erro ao buscar informações do usuário:", error);
-		}
-	};
+	useEffect(() => {
+		setProfilePicture(userTotals?.profilePicture || user?.profilePicture || "");
+	}, [userTotals?.profilePicture, user?.profilePicture]);
 
 	useEffect(() => {
-		fetchUserInfo();
-	}, []);
+		if (profilePicture) {
+			ExpoImage.prefetch(profilePicture);
+		}
+	}, [profilePicture]);
 
 	const handleEditPress = async () => {
 		try {
@@ -48,8 +38,8 @@ const ProfileImage = ({ size = 64, style }: any) => {
 
 						try {
 							const base64Image = await convertImageToBase64(uri);
-							await updateProfilePicture(jwt, { userId: user.id, profilePicture: 'data:image/png;base64,' + base64Image });
-							await fetchUserInfo();
+							  await updateProfilePicture(jwt, { userId: user.id, profilePicture: 'data:image/png;base64,' + base64Image });
+							  await refreshUserTotals();
 
 						} catch (error) {
 							console.error('Erro ao converter a imagem para base64:', error);
@@ -90,9 +80,19 @@ const ProfileImage = ({ size = 64, style }: any) => {
 	return (
 		<View style={styles.container}>
 			{profilePicture ? (
-				<Image source={{ uri: profilePicture }} style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]} />
+				<ExpoImage
+					source={{ uri: profilePicture }}
+					style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]}
+					contentFit="cover"
+					cachePolicy="memory-disk"
+				/>
 			) : (
-				<Image source={require('../assets/images/avatar-placeholder.png')} style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]} />
+				<ExpoImage
+					source={require('../assets/images/avatar-placeholder.png')}
+					style={[styles.profileImage, style, { width: size, height: size, borderRadius: size / 2 }]}
+					contentFit="cover"
+					cachePolicy="memory-disk"
+				/>
 			)}
 			{/* <TouchableOpacity onPress={handleEditPress} disabled={loading}>
 				<Image

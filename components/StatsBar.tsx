@@ -1,38 +1,15 @@
 // StatsBar.js
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../constants/Screen';
 import { useAuth } from '../contexts/AuthContext';
-import { getUser } from '../apis/user.api';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const StatsBar = () => {
-  const { jwt } = useAuth();
-  const [steps, setSteps] = useState<number>(0);
-  const [calories, setCalories] = useState<number>(0);
-  const [distance, setDistance] = useState<number>(0);
-  const [items, setItems] = useState<number>(0);
-
-  const fetchUserStats = async () => {
-    try {
-      if (jwt) {
-        const userInfo = await getUser(jwt);
-        // Converter distância em km para passos (aproximadamente 1km = 1400 passos)
-        const totalSteps = Math.floor((userInfo?.total_distance || 0) * 1400);
-        setSteps(totalSteps);
-        setCalories(Math.floor(userInfo?.total_calories || 0));
-        setDistance(userInfo?.total_distance || 0);
-        // Items pode ser mockado ou vir de outra fonte
-        setItems(19);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar stats:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserStats();
-  }, []);
+  const { userTotals } = useAuth();
+  const steps = useMemo(() => Math.floor((userTotals?.total_distance || 0) * 1400), [userTotals?.total_distance]);
+  const calories = useMemo(() => Math.floor(userTotals?.total_calories || 0), [userTotals?.total_calories]);
+  const distance = useMemo(() => userTotals?.total_distance || 0, [userTotals?.total_distance]);
+  const items = 19;
 
   return (
     <View style={styles.container}>
@@ -104,4 +81,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StatsBar;
+export default React.memo(StatsBar);

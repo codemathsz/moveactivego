@@ -1,33 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../contexts/AuthContext';
-import { getUser } from '../apis/user.api';
 
 const DailyMissionCard = () => {
-  const { jwt } = useAuth();
-  const [currentSteps, setCurrentSteps] = useState<number>(0);
+  const { userTotals } = useAuth();
   const [targetSteps] = useState<number>(8000);
   const [missionsCompleted, setMissionsCompleted] = useState<number>(19);
   const [totalMissions] = useState<number>(50);
 
-  const fetchUserData = async () => {
-    try {
-      if (jwt) {
-        const userInfo = await getUser(jwt);
-        // Converter distância em km para passos (aproximadamente 1km = 1400 passos)
-        const totalSteps = Math.floor((userInfo?.total_distance || 0) * 1400);
-        setCurrentSteps(totalSteps);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar dados do usuário:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  const currentSteps = useMemo(
+    () => Math.floor((userTotals?.total_distance || 0) * 1400),
+    [userTotals?.total_distance]
+  );
 
   const progressPercentage = Math.min((missionsCompleted / totalMissions) * 100, 100);
 
@@ -116,4 +102,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DailyMissionCard;
+export default React.memo(DailyMissionCard);

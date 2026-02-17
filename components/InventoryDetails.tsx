@@ -1,6 +1,7 @@
 import { RARITY_ENUM } from "@/app/inventory";
 import { Items } from "@/contexts/RunContext";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Image as ExpoImage } from 'expo-image';
 
 const InventoryDetails = ({ item }: { item: Items }) =>{
 
@@ -9,7 +10,12 @@ const InventoryDetails = ({ item }: { item: Items }) =>{
     return(
         <View style={styles.container}>
             <View style={{width: '30%'}}>
-                <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                <ExpoImage
+                    source={{ uri: item.picture }}
+                    style={styles.itemImage}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                />
             </View>
 
             <View style={styles.infoContainer}>

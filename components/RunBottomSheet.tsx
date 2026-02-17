@@ -193,4 +193,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RunBottomSheet;
+export default React.memo(RunBottomSheet);

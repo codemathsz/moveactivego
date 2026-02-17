@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import IconFeather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { getUser } from "../apis/user.api";
 import { useAuth } from "../contexts/AuthContext";
 import { useProfile } from "../contexts/ProfileContext";
 import { colors } from "../constants/Screen";
@@ -44,26 +43,8 @@ const Sidebar = ({ navigation }: any) => {
 
 const Header = () => {
   const { profile, userInfo } = useProfile();
-  const { user, jwt } = useAuth();
-  const [name, setName] = useState<string>(user?.name || profile.name);
-
-  const fetchUserInfo = async () => {
-    try {
-      if (jwt) {
-        const userInfo = await getUser(jwt);
-
-        setName(userInfo.name);
-      } else {
-        console.error("Token JWT é nulo.");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
+  const { user, userTotals } = useAuth();
+  const name = userTotals?.name || user?.name || profile.name;
 
   return (
     <View style={styles.headerContainer}>

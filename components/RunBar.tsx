@@ -4,7 +4,7 @@ import { DimensionValue, Image, SafeAreaView, StyleSheet, Text, View } from 'rea
 import { colors } from '../constants/Screen';
 import { useAuth } from '../contexts/AuthContext';
 import { getTotalMission, getUserPointsDay, getUserTotalPoints } from '../apis/user.api';
-import { useRun } from '../contexts/RunContext';
+import { useRunMetrics } from '../contexts/RunContext';
 
 interface RunStatProps {
   image: any;
@@ -14,7 +14,7 @@ interface RunStatProps {
 }
 
 const RunBar = ({time}: any) => {
-  const { formattedTimer, distance, calories, timer } = useRun()
+  const { formattedTimer, distance, calories, timer } = useRunMetrics()
   const segments = [
     {
       filledColor: '#3FDC81',

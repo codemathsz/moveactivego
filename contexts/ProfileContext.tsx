@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { UserInfoInterface } from '../interfaces/user-info.interface';
-import { getUser, getUserInfo } from '../apis/user.api';
+import { getUserInfo } from '../apis/user.api';
 
 interface ProfileProviderProps {
   children: React.ReactNode;
@@ -27,6 +27,7 @@ export interface ProfileContextType {
   userInfo: UserInfoInterface | null;
   setProfile: React.Dispatch<React.SetStateAction<typeof profiles[0]>>;
   getProfile: (jwt: string) => void;
+  refreshUserInfo: () => Promise<void>;
 }
 
 export const ProfileProvider = ({ children }: ProfileProviderProps) => {
@@ -34,25 +35,25 @@ export const ProfileProvider = ({ children }: ProfileProviderProps) => {
   const [profile, setProfile] = useState(profiles[0]);
   const [userInfo, setUserInfo] = useState<UserInfoInterface | null>(null);
 
-  const getProfile = async (jwt: string) => {
-    const response = await getUser(jwt);
-    setUserInfo(response);
-  }
-
-  const fecthUserInfo = async (token: string) => {
+  const getProfile = useCallback(async (token: string) => {
     const response = await getUserInfo(token);
     setUserInfo(response);
-  }
+  }, []);
 
- /*  useEffect(() => {
-    if (jwt){
-      getProfile(jwt)
-      fecthUserInfo(jwt);
+  const refreshUserInfo = useCallback(async () => {
+    if (!jwt) return;
+    const response = await getUserInfo(jwt);
+    setUserInfo(response);
+  }, [jwt]);
+
+  useEffect(() => {
+    if (jwt) {
+      getProfile(jwt);
     }
-  }, [jwt]); */
+  }, [jwt, getProfile]);
 
   return (
-    <ProfileContext.Provider value={{ profile, userInfo, setProfile, getProfile }}>
+    <ProfileContext.Provider value={{ profile, userInfo, setProfile, getProfile, refreshUserInfo }}>
       {children}
     </ProfileContext.Provider>
   );

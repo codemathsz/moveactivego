@@ -7,9 +7,11 @@ import { AppState, AppStateStatus } from "react-native";
 
 export interface AuthContextType {
   user: UserInterface | null;
+  userTotals: UserTotals | null;
   login: (email: string, password: string) => Promise<string | null>;
   logout: () => void;
   updateProfile: (jwt: string) => Promise<void>;
+  refreshUserTotals: () => Promise<void>;
   isLoggedIn: boolean;
   jwt: string | null;
   appVersion: string
@@ -27,6 +29,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProviderProps) => {
   const [user, setUser] = useState<UserInterface | null>(null);
+  const [userTotals, setUserTotals] = useState<UserTotals | null>(null);
   const [jwt, setJwt] = useState<string | null>("");
   const [loggedIn, setLoggedIn] = useState(isLoggedIn);
   const appState = useRef(AppState.currentState);
@@ -45,11 +48,13 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
         setIsLoggedIn(true);
         const userInfo = await getUser(token);
         setUser(userInfo);
+        setUserTotals(userInfo);
       } else {
         setJwt(null);
         setLoggedIn(false);
         setIsLoggedIn(false);
         setUser(null);
+        setUserTotals(null);
       }
     };
 
@@ -68,10 +73,12 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
             setLoggedIn(true);
             const userInfo = await getUser(token);
             setUser(userInfo);
+            setUserTotals(userInfo);
           } else {
             setJwt(null);
             setLoggedIn(false);
             setUser(null);
+            setUserTotals(null);
           }
         };
         restoreAuthState();
@@ -119,6 +126,7 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
         saveToken(response.data.token)
         
         setUser(userInfo);
+        setUserTotals(userInfo);
         setJwt(response.data.token);  
         setLoggedIn(true);
         setIsLoggedIn(true);
@@ -142,6 +150,7 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     } finally {
       // Sempre limpar os dados locais, independente do erro da API
       setUser(null);
+      setUserTotals(null);
       await AsyncStorage.removeItem('token');
       setJwt(null);
       setLoggedIn(false);
@@ -153,7 +162,40 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
     
     const userInfo = await getUser(jwt);
     setUser(userInfo);
+    setUserTotals(userInfo);
   };
 
-  return <AuthContext.Provider value={{ user, login, logout, updateProfile, isLoggedIn, jwt, appVersion }}>{children}</AuthContext.Provider>;
+  const refreshUserTotals = async () => {
+    if (!jwt) return;
+    const userInfo = await getUser(jwt);
+    setUser(userInfo);
+    setUserTotals(userInfo);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        userTotals,
+        login,
+        logout,
+        updateProfile,
+        refreshUserTotals,
+        isLoggedIn,
+        jwt,
+        appVersion,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
+export interface UserTotals {
+  name?: string;
+  profilePicture?: string;
+  total_distance?: number;
+  total_calories?: number;
+  total_duration?: number;
+  total_runs?: number;
+}

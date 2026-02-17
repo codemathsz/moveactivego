@@ -98,4 +98,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NavigationBar;
+export default React.memo(NavigationBar);

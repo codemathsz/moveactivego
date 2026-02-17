@@ -1,7 +1,8 @@
 import NavigationBar from "@/components/navigationBar";
 import { Items } from "@/contexts/RunContext";
 import { useRoute } from "@react-navigation/native";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Image as ExpoImage } from 'expo-image';
 import { RARITY_ENUM } from "../inventory";
 
 const ItemScreen = () => {
@@ -12,7 +13,12 @@ const ItemScreen = () => {
         
         <View style={styles.container}>
             <View style={styles.imageContainer}>
-                <Image source={{ uri: item.picture }} style={styles.itemImage} />
+                <ExpoImage
+                    source={{ uri: item.picture }}
+                    style={styles.itemImage}
+                    contentFit="contain"
+                    cachePolicy="memory-disk"
+                />
             </View>
 
             <View style={styles.infoContainer}>

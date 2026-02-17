@@ -1,12 +1,11 @@
-import React, { useLayoutEffect, useState } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useLayoutEffect, useMemo, useState, useCallback } from 'react';
+import { StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import MapArea from '../../components/mapArea';
 import RunBottomSheet from '../../components/RunBottomSheet';
 import SpeedCard from '../../components/SpeedCard';
 import CountdownScreen from '../../components/CountdownScreen';
-import { colors } from '../../constants/Screen';
 import { useNavigation } from '@react-navigation/native';
-import { useRun } from '../../contexts/RunContext';
+import { useRun, useRunGps, useRunMetrics } from '../../contexts/RunContext';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface RouteParams {
@@ -28,7 +27,9 @@ interface RouteParamsLocation {
 
 const RunScreen = () => {
   const navigation = useNavigation();
-  const { stopRun, formattedTimer, distance, calories, location, timer } = useRun();
+  const { stopRun } = useRun();
+  const { formattedTimer, distance, calories, timer } = useRunMetrics();
+  const { location } = useRunGps();
   const [showCountdown, setShowCountdown] = useState(timer === 0);
 
   useLayoutEffect(() => {
@@ -62,22 +63,21 @@ const RunScreen = () => {
     }
   }, [showCountdown, navigation]);
 
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = useCallback(() => {
     setShowCountdown(false);
-  };
+  }, []);
 
-  const handlePause = async () => {
+  const handlePause = useCallback(async () => {
     await stopRun();
-  };
+  }, [stopRun]);
 
-  const getCurrentSpeed = () => {
+  const currentSpeed = useMemo(() => {
     if (location?.coords?.speed) {
       const speedKmh = (location.coords.speed || 0) * 3.6;
-      // Se a velocidade for negativa ou menor que 0.5 km/h, retornar 0
       return speedKmh > 0.5 ? speedKmh.toFixed(2) : '0.00';
     }
     return '0.00';
-  };
+  }, [location]);
 
   if (showCountdown) {
     return <CountdownScreen onComplete={handleCountdownComplete} />;
@@ -93,7 +93,7 @@ const RunScreen = () => {
       </View>
 
       {/* Card de velocidade */}
-      <SpeedCard speed={getCurrentSpeed()} />
+      <SpeedCard speed={currentSpeed} />
 
       {/* Bottom Sheet com estatísticas */}
       <RunBottomSheet

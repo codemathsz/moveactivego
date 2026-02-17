@@ -13,7 +13,6 @@ import LoginScreen from './login';
 import ResetPassword from './resetPassword';
 import FreeRun from './freeRun';
 import RunScreen from './run';
-import RunSummaryScreen from './runSummary';
 import DashboardScreen from './dashboard';
 import Sidebar from '@/components/sidebar';
 import VerificationScreen from './verification';
@@ -28,6 +27,7 @@ import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgr
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { LoadingLogo } from '@/components/LoadingLogo';
+import RunSummaryScreen from './runSummary';
 
 // Previne a splash screen de esconder automaticamente
 SplashScreen.preventAutoHideAsync();

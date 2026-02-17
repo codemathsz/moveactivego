@@ -1,36 +1,16 @@
 // TopBar.js
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { getUnreadNotifications, getUser, markReadNotifications } from '../apis/user.api';
+import { markReadNotifications } from '../apis/user.api';
 import { useAuth } from '../contexts/AuthContext';
-import { useProfile } from '../contexts/ProfileContext';
-import { colors } from '../constants/Screen';
 import ProfileImage from './profileImage';
 
 const TopBar = ({ navigation }: any) => {
-  const { user, jwt } = useAuth();
-  const { profile } = useProfile();
-  const [name, setName] = useState<string>('Corredor');
+  const { user, jwt, userTotals } = useAuth();
   const [not, setNot] = useState<number>(0);
-  const [currentDate, setCurrentDate] = useState<string>('');
 
-  const fetchUserInfo = async () => {
-    try {
-      if (jwt) {
-        const userInfo = await getUser(jwt);
-        setName(userInfo.name);
-
-        /* const notification = await getUnreadNotifications(jwt);
-        setNot(notification.length) */
-
-      } else {
-        console.error("Token JWT é nulo.");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error);
-    }
-  };
+  const name = userTotals?.name || user?.name || 'Corredor';
 
   const getFormattedDate = () => {
     const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
@@ -44,10 +24,7 @@ const TopBar = ({ navigation }: any) => {
     return `${dayName}, ${day} ${month}`;
   };
 
-  useEffect(() => {
-    fetchUserInfo();
-    setCurrentDate(getFormattedDate());
-  }, []);
+  const currentDate = useMemo(() => getFormattedDate(), []);
 
   const updateNot = async () => {
     if (jwt) {

@@ -1,9 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../constants/Screen';
-import { getUser } from '../../apis/user.api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import ProfileImage from '@/components/profileImage';
@@ -11,31 +10,15 @@ import NavigationBar from '@/components/navigationBar';
 
 const ProfileScreen = () => {
   const { profile } = useProfile();
-  const { user, jwt } = useAuth();
+  const { user, userTotals } = useAuth();
   const { userInfo } = useProfile();
   const navigation = useNavigation<any>();
-  const [name, setName] = useState(user?.name ?? profile.name);
-  const [userTotalDuration, setUserTotalDuration] = useState();
-  const [userTotalCalories, setUserTotalCalories] = useState();
-  const [userTotalDistance, setUserTotalDistance] = useState<number>();
-  const [userTotalRuns, setUserTotalRuns] = useState();
 
-  const fetchUserInfo = async () => {
-    try {
-      if (jwt) {
-        const userInfo = await getUser(jwt);
-        setName(userInfo.name);
-        setUserTotalCalories(userInfo?.total_calories);
-        setUserTotalDistance(userInfo?.total_distance);
-        setUserTotalDuration(userInfo?.total_duration);
-        setUserTotalRuns(userInfo?.total_runs);
-      } else {
-        console.error("Token JWT é nulo.");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar informações do usuário:", error);
-    }
-  };
+  const name = userTotals?.name || user?.name || profile.name;
+  const userTotalDuration = userTotals?.total_duration || 0;
+  const userTotalCalories = userTotals?.total_calories || 0;
+  const userTotalDistance = userTotals?.total_distance || 0;
+  const userTotalRuns = userTotals?.total_runs || 0;
 
   const convertTime = (time: number = 0) => {
     const hours = Math.floor(time / 60);
@@ -43,10 +26,6 @@ const ProfileScreen = () => {
     return `${hours}:${minutes}`;
 
   }
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
