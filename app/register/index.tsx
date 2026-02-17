@@ -1,7 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -14,7 +13,6 @@ import {
 } from "react-native";
 import { TextInputMask } from "react-native-masked-text";
 import MaskInput, { Masks } from "react-native-mask-input";
-import Toast from "react-native-root-toast";
 import { register } from "../../apis/user.api";
 import { UserRegister } from "../../interfaces/user.interface";
 import LogoAndTagline from "../../components/LogoAndTagline";
@@ -30,6 +28,7 @@ import { colors } from "@/constants/Screen";
 import { BLACK } from "@/constants/Colors";
 import CustomCheckbox from "@/components/CustomCheckbox";
 import { Fonts } from "@/constants/Fonts";
+import { useToast } from "@/contexts/ToastContext";
 
 const RegisterScreen = () => {
   const [name, setName] = useState("");
@@ -42,6 +41,7 @@ const RegisterScreen = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false)
   const navigation = useNavigation<any>();
+  const { showError, showSuccess } = useToast();
   const [countryCode, setCountryCode] = useState('BR');
   const emailRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
@@ -54,99 +54,44 @@ const RegisterScreen = () => {
 
   const handleRegisterPress = async () => {
     if (!name || !email || !birthdate || !password || !confirmPassword || !phone) {
-      if(Platform.OS){
-        Alert.alert("Preencha todos os campos")
-      }else{
-        Toast.show("Preencha todos os campos", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
-      }
-      
+      showError("Preencha todos os campos");
       return;
     } else if (!acceptedTerms) {
-      if(Platform.OS){
-        Alert.alert("Você precisa aceitar os termos e condições")
-      }else{
-        Toast.show("Você precisa aceitar os termos e condições", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
-      }
+      showError("Você precisa aceitar os termos e condições");
       return;
     } else if (password !== confirmPassword) {
-      if(Platform.OS){
-        Alert.alert("As senhas não coincidem")
-      }else{
-        Toast.show("As senhas não coincidem", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
-      }
+      showError("As senhas não coincidem");
       return;
-    }else if(password.length < 9){
-      if(Platform.OS){
-        Alert.alert("A senha deve conter no minimo 9 caracteres.")
-      }else{
-        Toast.show("A senha deve conter no minimo 9 caracteres.", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
+    } else if (password.length < 9) {
+      showError("A senha deve conter no mínimo 9 caracteres.");
+      return;
+    }
+    
+    const [day, month, year] = birthdate.split("/");
+    const user: UserRegister = {
+      name: name,
+      email: email,
+      birthdate: `${year}-${month}-${day}`,
+      password: password,
+      phone: phone,
+    };
+    setLoading(true);
+    
+    try {
+      const response = await register(user);
+      if (response["success"]) {
+        showSuccess("Cadastro realizado com sucesso!");
+        navigation.navigate("Verification", { email: email });
+      } else {
+        const firstErrorField = Object.keys(response.errors)[0];
+        const firstErrorMessage = response.errors[firstErrorField][0];
+        showError(firstErrorMessage);
       }
-    } else {
-      const [day, month, year] = birthdate.split("/");
-      const user: UserRegister = {
-        name: name,
-        email: email,
-        birthdate: `${year}-${month}-${day}`,
-        password: password,
-        phone: phone,
-      };
-      setLoading(true)
-      
-      try {
-        const response = await register(user)
-        if(response["success"]){
-          navigation.navigate("Verification", { email: email });
-        }else{
-          const firstErrorField = Object.keys(response.errors)[0]; // Acessa o primeiro campo com erro
-          const firstErrorMessage = response.errors[firstErrorField][0]
-          if(Platform.OS){
-            Alert.alert(firstErrorMessage)
-          }else{
-            Toast.show(firstErrorMessage, {
-              duration: Toast.durations.SHORT,
-              position: Toast.positions.CENTER,
-              shadow: true,
-              animation: true,
-              hideOnPress: true,
-            });
-          }
-        }
-        //navigation.navigate("Login");
-        setLoading(false)
-      } catch (error:any) {
-        Toast.show("Erro desconhecido. Tente novamente mais tarde.", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
-        setLoading(false)
-      }
+    } catch (error: any) {
+      console.error("Erro ao registrar:", error);
+      showError("Erro desconhecido. Tente novamente mais tarde.");
+    } finally {
+      setLoading(false);
     }
   };
 

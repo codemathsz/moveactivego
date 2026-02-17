@@ -5,6 +5,7 @@ import { RootSiblingParent } from 'react-native-root-siblings';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ProfileProvider } from '../contexts/ProfileContext';
 import { RunProvider } from '../contexts/RunContext';
+import { ToastProvider } from '../contexts/ToastContext';
 import { screens } from '../constants/Screen';
 import HomeScreen from './Home';
 import RegisterScreen from './register';
@@ -221,29 +222,31 @@ function App() {
 
   return (
     <NavigationContainer>
-      <AuthProvider
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={(value: any) => {
-          setIsLoggedIn(value);
-        }}>
-        {isLoggedIn ? (
-          <SafeAreaView style={{ flex: 1 }}>
-            <RootSiblingParent>
-                  <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-                  <RunProvider>
-                    <ProfileProvider>
-                      <LoggedInDrawer />
-                    </ProfileProvider>
-                  </RunProvider>
-            </RootSiblingParent>
-          </SafeAreaView>
-        ) : (
-          <SafeAreaView style={{ flex: 1 }} edges={[]}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
-            <HomeStack />
-          </SafeAreaView>
-        )}
-      </AuthProvider>
+      <RootSiblingParent>
+        <ToastProvider>
+          <AuthProvider
+            isLoggedIn={isLoggedIn}
+            setIsLoggedIn={(value: any) => {
+              setIsLoggedIn(value);
+            }}>
+            {isLoggedIn ? (
+              <SafeAreaView style={{ flex: 1 }}>
+                <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+                <RunProvider>
+                  <ProfileProvider>
+                    <LoggedInDrawer />
+                  </ProfileProvider>
+                </RunProvider>
+              </SafeAreaView>
+            ) : (
+              <SafeAreaView style={{ flex: 1 }} edges={[]}>
+                <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+                <HomeStack />
+              </SafeAreaView>
+            )}
+          </AuthProvider>
+        </ToastProvider>
+      </RootSiblingParent>
     </NavigationContainer>
   );
 }

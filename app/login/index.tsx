@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Toast from 'react-native-root-toast';
 import CustomLabel from '../../components/customLabel';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import LogoAndTagline from '../../components/LogoAndTagline';
 import CustomButton from '@/components/customButton';
 import AntDesign from '@expo/vector-icons/AntDesign';
@@ -21,6 +21,7 @@ const LoginScreen = () => {
   const [showPassword] = useState(false);
   const [loading, setLoading] = useState(false)
   const { login } = useAuth();
+  const { showError, showWarning, showInfo } = useToast();
 
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [emailError, setEmailError] = useState("");
@@ -45,20 +46,6 @@ const LoginScreen = () => {
     return emailRegex.test(email);
   };
 
-  const showMessage = (message: string) => {
-    if (Platform.OS === 'android' || Platform.OS === 'ios') {
-      Alert.alert("Atenção", message);
-    } else {
-      Toast.show(message, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
-    }
-  };
-
   const validateForm = (): boolean => {
     let isValid = true;
     setEmailError("");
@@ -66,21 +53,21 @@ const LoginScreen = () => {
 
     if (!email.trim()) {
       setEmailError("E-mail é obrigatório");
-      showMessage("Por favor, insira seu e-mail");
+      showError("Por favor, insira seu e-mail");
       isValid = false;
     } else if (!validateEmail(email.trim())) {
       setEmailError("E-mail inválido");
-      showMessage("Por favor, insira um e-mail válido");
+      showError("Por favor, insira um e-mail válido");
       isValid = false;
     }
 
     if (!password) {
       setPasswordError("Senha é obrigatória");
-      if (isValid) showMessage("Por favor, insira sua senha");
+      if (isValid) showError("Por favor, insira sua senha");
       isValid = false;
     } else if (password.length < 6) {
       setPasswordError("Senha deve ter no mínimo 6 caracteres");
-      if (isValid) showMessage("A senha deve ter no mínimo 6 caracteres");
+      if (isValid) showError("A senha deve ter no mínimo 6 caracteres");
       isValid = false;
     }
 
@@ -95,29 +82,40 @@ const LoginScreen = () => {
     setLoading(true);
     
     try {
-      console.log(email, password);
-      
       const response = await login(email, password);
       
-      if (response) {
-        console.log(response);
-        
-        if (response === "Email não verificado. Por favor, verifique seu email antes de fazer login.") {
+      // Se response é null, login foi bem sucedido
+      // Se response é uma string, é uma mensagem de erro
+      if (response === null) {
+        // Login bem sucedido, não precisa fazer nada
+        // O AuthContext já vai atualizar o estado e redirecionar
+        return;
+      }
+      
+      // Se chegou aqui, houve um erro
+      if (response === "Email não verificado. Por favor, verifique seu email antes de fazer login.") {
+        try {
           const responseRequestCode = await requestCode(email.trim(), "email_confirmation");
           
           if (responseRequestCode.success) {
+            showWarning("Conta não verificada. Um novo código foi enviado para seu email.");
             navigation.navigate("Verification", { email: email.trim() });
           } else {
-            showMessage("Conta informada não está ativa. Erro ao enviar código");
+            showError("Conta não verificada. Erro ao enviar código de verificação.");
           }
-        } else {
-          showMessage("Usuário ou senha inválidos");
+        } catch (error) {
+          console.error("Erro ao enviar código:", error);
+          showError("Erro ao enviar código de verificação. Tente novamente.");
         }
+      } else {
+        // Exibe a mensagem de erro retornada pela API
+        showError(response || "Usuário ou senha inválidos");
       }
     } catch (error) {
       console.error("Erro ao fazer login:", error);
-      showMessage("Erro ao fazer login. Tente novamente");
+      showError("Erro ao fazer login. Verifique sua conexão e tente novamente.");
     } finally {
+      // Garante que o loading sempre vai parar
       setLoading(false);
     }
   };

@@ -111,22 +111,24 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   };
 
   const login = async ( email: string, password: string ) => {
-    console.log("Auth login ", email, password);
-    
-    const response = await authenticate(email, password);
-    
-    if (response.success) {
-      const userInfo = await getUser(response.data.token);
-      saveToken(response.data.token)
-      console.log(userInfo);
+    try {
+      const response = await authenticate(email, password);
       
-      setUser(userInfo);
-      setJwt(response.data.token);  
-      setLoggedIn(true);
-      setIsLoggedIn(true);
-      return null;
-    } else {
-      return response.message
+      if (response.success) {
+        const userInfo = await getUser(response.data.token);
+        saveToken(response.data.token)
+        
+        setUser(userInfo);
+        setJwt(response.data.token);  
+        setLoggedIn(true);
+        setIsLoggedIn(true);
+        return null;
+      } else {
+        return response.message
+      }
+    } catch (error: any) {
+      console.error("Erro capturado no AuthContext.login:", error);
+      return error?.message || "Erro ao fazer login. Verifique sua conexão.";
     }
   };
 

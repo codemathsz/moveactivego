@@ -2,7 +2,6 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
-import Toast from "react-native-root-toast";
 import LogoAndTagline from "../../components/LogoAndTagline";
 import CustomButton from "../../components/customButton";
 import { colors } from "../../constants/Screen";
@@ -10,6 +9,7 @@ import { confirmRegistration, requestCode, verifyEmail } from "../../apis/user.a
 import { UserConfirmation } from "../../interfaces/user-confirmation.interface";
 import { UserVerifyEmailWithCode } from "../../interfaces/user-verify-email";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useToast } from "../../contexts/ToastContext";
 
 type RootStackParamList = {
   Verification: { email: string };
@@ -31,6 +31,7 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
     value,
     setValue,
   });
+  const { showError, showSuccess } = useToast();
 
   const { email } = route.params;
   const handleRegisterPress = async () => {
@@ -44,46 +45,32 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
 
     try {
       const response = await verifyEmail(user);
-      setLoading(false);
-      if (response)
+      if (response) {
+        showSuccess("Email verificado com sucesso!");
         navigation.navigate("Login");
+      }
     } catch (error) {
+      console.log('Verification error:', error);
+      showError("Código inválido");
+    } finally {
       setLoading(false);
-      console.log('Registration error:', error);
-      let toast = Toast.show("Codigo inválido", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
     }
-
   };
 
   const handleReesendCode = async () =>{
     if(!email) return
-    const response = await requestCode(email, "email_confirmation")
-    console.log(response);
-    
-    if(response.success){
-      Toast.show("Email reenviado com sucesso", {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
-      return;
-    }else{
-      Toast.show("Falha ao enviar email. "+ response.message, {
-        duration: Toast.durations.SHORT,
-        position: Toast.positions.CENTER,
-        shadow: true,
-        animation: true,
-        hideOnPress: true,
-      });
-      return;
+    try {
+      const response = await requestCode(email, "email_confirmation")
+      console.log(response);
+      
+      if(response.success){
+        showSuccess("Email reenviado com sucesso");
+      }else{
+        showError("Falha ao enviar email. "+ response.message);
+      }
+    } catch (error) {
+      console.error("Erro ao reenviar código:", error);
+      showError("Erro ao reenviar código. Tente novamente.");
     }
   }
 

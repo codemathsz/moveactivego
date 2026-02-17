@@ -14,9 +14,9 @@ import CustomInput from "../../components/CustomInput"
 import { useEffect, useState } from "react";
 import { requestCode, resetPasswordConfirmation } from "../../apis/user.api";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import { ResetPasswordConfirmation } from "../../interfaces/reset-password-confirmation.interface";
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from "react-native-confirmation-code-field";
-import Toast from "react-native-root-toast";
 import { useNavigation } from "@react-navigation/native";
 import CustomButton from "@/components/customButton";
 import { Fonts } from "@/constants/Fonts";
@@ -36,6 +36,7 @@ const ResetPassword = () =>{
   const [newPasswordConfirm, setNewPasswordConfirm] = useState<string>('')
   const [error, setError] = useState<string>('')
   const {jwt} = useAuth()
+  const { showError, showSuccess } = useToast();
 
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   
@@ -65,22 +66,11 @@ const ResetPassword = () =>{
       setSendEmail(true)
     }else{
       if (newPassword !== newPasswordConfirm) {
-        Toast.show("As senhas não coincidem", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
+        showError("As senhas não coincidem");
         return;
       }else if(newPassword.length < 9){
-        Toast.show("A senha deve conter no minimo 9 caracteres.", {
-          duration: Toast.durations.SHORT,
-          position: Toast.positions.CENTER,
-          shadow: true,
-          animation: true,
-          hideOnPress: true,
-        });
+        showError("A senha deve conter no mínimo 9 caracteres.");
+        return;
       } 
       const dto: ResetPasswordConfirmation = {
         email,
@@ -88,9 +78,16 @@ const ResetPassword = () =>{
         new_password: newPassword,
         new_password_confirmation: newPasswordConfirm
       }
-      const response = await resetPasswordConfirmation(jwt!, dto)
-      if(response)
-        navigation.navigate("Login" as any)
+      try {
+        const response = await resetPasswordConfirmation(jwt!, dto)
+        if(response) {
+          showSuccess("Senha alterada com sucesso!");
+          navigation.navigate("Login" as any)
+        }
+      } catch (error) {
+        console.error("Erro ao resetar senha:", error);
+        showError("Erro ao resetar senha. Verifique o código e tente novamente.");
+      }
     }
   }
   return(
