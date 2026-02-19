@@ -15,6 +15,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { colors } from '../../constants/Screen';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
+import { useToast } from '../../contexts/ToastContext';
 import { userUpdateInfo, updateProfilePicture } from '../../apis/user.api';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/customButton';
@@ -23,6 +24,7 @@ const SettingsScreen = () => {
     const navigation = useNavigation<any>();
     const { jwt, user, updateProfile } = useAuth();
     const { userInfo, refreshUserInfo } = useProfile();
+    const { showWarning } = useToast();
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -213,54 +215,7 @@ const SettingsScreen = () => {
     };
 
     const handleSave = async () => {
-        if (!jwt || !user?.id) {
-            Alert.alert('Erro', 'Usuário não identificado');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            // Remove toda formatação do telefone antes de enviar
-            const phoneNumbers = phone.replace(/\D/g, '');
-
-            // Pega o weight do userInfo, user ou usa 0 como padrão
-            const weightValue = String(userInfo?.weight || user?.weight || '0');
-
-            // Garantir que o userId é uma string válida
-            const userId = String(user.id);
-
-            console.log('User ID:', userId);
-            console.log('Salvando dados:', {
-                userId,
-                name,
-                phone: phoneNumbers,
-                recoveryEmail: email,
-                birthdate: formatDateForAPI(birthdate),
-                weight: weightValue,
-            });
-
-            await userUpdateInfo(jwt, userId, {
-                name,
-                phone: phoneNumbers,
-                recoveryEmail: email,
-                birthdate: formatDateForAPI(birthdate),
-                weight: weightValue,
-            });
-
-            await updateProfile(jwt);
-            await refreshUserInfo();
-
-            // Atualiza valores iniciais
-            setInitialValues({ name, email, phone, birthdate });
-            setHasChanges(false);
-
-            Alert.alert('Sucesso', 'Informações atualizadas com sucesso!');
-        } catch (error: any) {
-            console.error('Erro ao salvar:', error);
-            Alert.alert('Erro', error.message || 'Não foi possível salvar as alterações.');
-        } finally {
-            setLoading(false);
-        }
+        showWarning('API em manutenção');
     };
 
     return (
@@ -359,7 +314,7 @@ const SettingsScreen = () => {
                             <Ionicons name="chevron-forward" size={20} color="#898996" />
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Privacy')}>
+                        <View style={styles.menuItem}>
                             <View style={styles.menuItemLeft}>
                                 <View style={styles.iconCircle}>
                                     <Ionicons name="shield-checkmark-outline" size={20} color="#373743" />
@@ -367,7 +322,7 @@ const SettingsScreen = () => {
                                 <Text style={styles.menuItemText}>Privacidade</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color="#898996" />
-                        </TouchableOpacity>
+                        </View>
 
                         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('DeleteAccount')}>
                             <View style={styles.menuItemLeft}>

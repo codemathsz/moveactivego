@@ -23,6 +23,7 @@ import InventoryScreen from './inventory';
 import ItemScreen from './item';
 import SettingsScreen from './settings';
 import ChangePasswordScreen from './changePassword';
+import DeleteAccountScreen from './deleteAccount';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgroundRestrictions';
@@ -139,6 +140,13 @@ function LoggedInStackScreen() {
       <LoggedInStack.Screen
         name='ChangePassword'
         component={ChangePasswordScreen}
+        options={{
+          headerShown: false,
+        } as any}
+      />
+      <LoggedInStack.Screen
+        name='DeleteAccount'
+        component={DeleteAccountScreen}
         options={{
           headerShown: false,
         } as any}

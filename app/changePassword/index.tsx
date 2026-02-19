@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors } from '../../constants/Screen';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/customButton';
 import { updatePassword } from '../../apis/user.api';
@@ -19,6 +20,7 @@ import { updatePassword } from '../../apis/user.api';
 const ChangePasswordScreen = () => {
   const navigation = useNavigation<any>();
   const { jwt, user } = useAuth();
+  const { showWarning } = useToast();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -26,51 +28,7 @@ const ChangePasswordScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    // Validações
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert('Atenção', 'Por favor, preencha todos os campos');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      Alert.alert('Atenção', 'A senha deve ter no mínimo 6 caracteres');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Atenção', 'As senhas não coincidem');
-      return;
-    }
-
-    if (!jwt) {
-      Alert.alert('Erro', 'Usuário não identificado');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await updatePassword(jwt, {
-        password: currentPassword,
-        newPassword: newPassword,
-      });
-
-      Alert.alert('Sucesso', 'Senha alterada com sucesso!', [
-        {
-          text: 'OK',
-          onPress: () => navigation.goBack(),
-        },
-      ]);
-
-      // Limpar campos
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (error: any) {
-      console.error('Erro ao alterar senha:', error);
-      Alert.alert('Erro', error.message || 'Não foi possível alterar a senha.');
-    } finally {
-      setLoading(false);
-    }
+    showWarning('API em manutenção');
   };
 
   return (
@@ -152,7 +110,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingTop: 32,
+    paddingTop: 48,
   },
   form: {
     gap: 16,
