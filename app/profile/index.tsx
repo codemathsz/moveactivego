@@ -38,7 +38,7 @@ const ProfileScreen = () => {
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Meu Perfil</Text>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('Settings')}>
           <Ionicons name="settings-outline" size={20} color="#373743" />
         </TouchableOpacity>
       </View>

@@ -104,9 +104,11 @@ export const updatePassword = async (token: string, dto: UpdatePassword) => {
   }
 }
 
-export const userUpdateInfo = async (token: string, dto: UserUpdateInfo) => {
+export const userUpdateInfo = async (token: string, userId: string, dto: UserUpdateInfo) => {
   try {
-    const response = await axiosInstanceAuthoraized(token).put('/user/update', dto);
+    console.log(`update userid`,userId);
+    
+    const response = await axiosInstanceAuthoraized(token).put(`/user/update/${userId}`, dto);
     return response.data.data ?? response.data;
   } catch (error: any) {
     throw new Error(error.response.data.message);

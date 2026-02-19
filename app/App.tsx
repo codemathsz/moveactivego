@@ -21,6 +21,7 @@ import ActivitiesScreen from './activities';
 import { ActivityIndicator, Alert, StatusBar, Text, View } from 'react-native';
 import InventoryScreen from './inventory';
 import ItemScreen from './item';
+import SettingsScreen from './settings';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { checkBackgroundRestrictions } from '@/utils/checkBackground/checkBackgroundRestrictions';
@@ -125,6 +126,13 @@ function LoggedInStackScreen() {
         options={{
           ...screens.withHeader,
           title: "",
+        } as any}
+      />
+      <LoggedInStack.Screen
+        name='Settings'
+        component={SettingsScreen}
+        options={{
+          headerShown: false,
         } as any}
       />
 
