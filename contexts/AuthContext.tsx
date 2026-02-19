@@ -4,6 +4,7 @@ import { authenticate, logoutApi } from "../apis/auth.api";
 import { getUser } from "../apis/user.api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, AppStateStatus } from "react-native";
+import { setLogoutCallback } from "../apis/base.api";
 
 export interface AuthContextType {
   user: UserInterface | null;
@@ -40,15 +41,36 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
   }, [loggedIn]); 
 
   useEffect(() => {
+    // Registrar callback de logout para ser chamado quando houver 401
+    setLogoutCallback(() => {
+      // Limpar estados locais
+      setUser(null);
+      setUserTotals(null);
+      setJwt(null);
+      setLoggedIn(false);
+      setIsLoggedIn(false);
+    });
+
     const restoreAuthState = async () => {
       const token = await getToken();
       if (token) {
         setJwt(token);
         setLoggedIn(true);
         setIsLoggedIn(true);
-        const userInfo = await getUser(token);
-        setUser(userInfo);
-        setUserTotals(userInfo);
+        try {
+          const userInfo = await getUser(token);
+          setUser(userInfo);
+          setUserTotals(userInfo);
+        } catch (error) {
+          console.error("Erro ao restaurar dados do usuário:", error);
+          // Se falhar ao buscar dados do usuário, fazer logout
+          await AsyncStorage.removeItem('token');
+          setJwt(null);
+          setLoggedIn(false);
+          setIsLoggedIn(false);
+          setUser(null);
+          setUserTotals(null);
+        }
       } else {
         setJwt(null);
         setLoggedIn(false);
@@ -71,9 +93,20 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
           if (token) {
             setJwt(token);
             setLoggedIn(true);
-            const userInfo = await getUser(token);
-            setUser(userInfo);
-            setUserTotals(userInfo);
+            try {
+              const userInfo = await getUser(token);
+              setUser(userInfo);
+              setUserTotals(userInfo);
+            } catch (error) {
+              console.error("Erro ao restaurar dados do usuário ao voltar do background:", error);
+              // Se falhar ao buscar dados do usuário, fazer logout
+              await AsyncStorage.removeItem('token');
+              setJwt(null);
+              setLoggedIn(false);
+              setIsLoggedIn(false);
+              setUser(null);
+              setUserTotals(null);
+            }
           } else {
             setJwt(null);
             setLoggedIn(false);
@@ -122,12 +155,14 @@ export const AuthProvider = ({ children, isLoggedIn, setIsLoggedIn }: AuthProvid
       const response = await authenticate(email, password);
       
       if (response.success) {
+        // Salvar token ANTES de buscar dados do usuário
+        await saveToken(response.data.token);
+        setJwt(response.data.token);
+        
         const userInfo = await getUser(response.data.token);
-        saveToken(response.data.token)
         
         setUser(userInfo);
         setUserTotals(userInfo);
-        setJwt(response.data.token);  
         setLoggedIn(true);
         setIsLoggedIn(true);
         return null;

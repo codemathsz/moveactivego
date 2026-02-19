@@ -181,17 +181,18 @@ export const getUserSkill = async (token: string) => {
 
 export const postRun = async (token: string, dto: IRun): Promise<{ success: boolean; message: string; data: any }> =>  {
   try {
-    console.log(dto);
+    console.log('📤 Enviando dados para iniciar corrida:', dto);
     
     const response = await axiosInstanceAuthoraized(token).post('/run/start', dto);
+    console.log('✅ Resposta da API startRun:', JSON.stringify(response.data, null, 2));
+    
     return response.data
   }catch (error:any) {
     if (error.response && error.response.data) {
-      console.log(error.response.data);
-      await sendLogGrafana('START_RUN: '+  error)
+      console.error('❌ Erro ao iniciar corrida:', error.response.data);
       return error.response.data
     } else {
-      console.error("Unexpected error: ", error);
+      console.error("❌ Erro inesperado ao iniciar corrida:", error);
       throw {
         success: false,
         message: "Erro desconhecido. Tente novamente mais tarde."
@@ -215,13 +216,15 @@ export const updateRun = async (token: string, runId: any,  dto: RunUpdateDTO) =
 
 export const finishRun = async (token: string, runId:number, dto: RunFinishDTO) => {
   try {
-    console.log("dto stop run ", dto);
+    console.log("📤 Finalizando corrida ID:", runId);
+    console.log("📤 Dados de finalização:", dto);
     
     const response = await axiosInstanceAuthoraized(token).post(`/run/finish/${runId}`, dto);
+    console.log('✅ Resposta da API finishRun:', JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error: any) {
-    console.log('Erro ao finalizar corrida na API:', error);
-    await sendLogGrafana('STOP_RUN: '+  error);
+    console.error('❌ Erro ao finalizar corrida na API:', error);
+    console.error('❌ Detalhes do erro:', error?.response?.data);
     
     // Retornar erro tratado sem bloquear o fluxo
     return {

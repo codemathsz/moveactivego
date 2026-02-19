@@ -521,11 +521,29 @@ export const RunProvider = ({children}: RunProviderProps) => {
   }, []);
 
   const handleSuccessfulRunStart = useCallback(async (runData: IRun, initialRoute: RoutesType) => {
+    console.log('🏃 handleSuccessfulRunStart - Dados recebidos:', JSON.stringify(runData, null, 2));
+    console.log('🏃 ID da corrida:', runData?.id);
+    
+    // Verificar permissão de background antes de iniciar
+    const hasBackgroundPermission = await verifyBackgroundLocationPermission();
+    if (!hasBackgroundPermission) {
+      console.error('❌ Permissão de background não concedida');
+      Alert.alert(
+        'Permissão Necessária',
+        'Para registrar sua corrida, é necessário permitir o acesso à localização em segundo plano. Acesse as configurações e selecione "Permitir o tempo todo".'
+      );
+      return;
+    }
+    
     setIsRunning(true);
-    await startLocationTask()
+    console.log('✅ Iniciando location task...');
+    await startLocationTask();
     isRunningRef.current = true;
     setRun(runData);
     runRef.current = runData;
+    
+    console.log('✅ Corrida salva no estado. runRef.current.id:', runRef.current?.id);
+    
     setFirstRouteCoordinates({
       latitude: initialRoute.latitude,
       longitude: initialRoute.longitude,
@@ -536,10 +554,10 @@ export const RunProvider = ({children}: RunProviderProps) => {
     };
     setHasSpawnedReward(false);
     startWatchingPosition();
-    console.log("Corrida iniciada com sucesso!");
+    console.log("✅ Corrida iniciada com sucesso!");
     
     navigation.navigate('Run');
-  }, [navigation, startWatchingPosition]);
+  }, [navigation, startWatchingPosition, verifyBackgroundLocationPermission]);
 
   const startRun = useCallback(async (): Promise<void> => {
     if (!jwt || !location) return;
@@ -553,15 +571,41 @@ export const RunProvider = ({children}: RunProviderProps) => {
       updateRoutesToSend(() => initialRouteList);
 
       const runDTO: IRun = buildRunDTO(currentCity, initialRouteList);
+      console.log('🚀 Iniciando corrida...');
+      
       const responseStartRun = await postRun(jwt, runDTO);
+      console.log('📥 Resposta completa do servidor:', JSON.stringify(responseStartRun, null, 2));
 
       if (responseStartRun.success || responseStartRun["success"]) {
-        handleSuccessfulRunStart(responseStartRun.data.run, initialRouteList[0]);
+        // Verificar estruturas possíveis da resposta
+        let runData = responseStartRun.data?.run || (responseStartRun as any).run || responseStartRun.data;
+        
+        console.log('✅ Corrida criada com sucesso! Dados:', JSON.stringify(runData, null, 2));
+        
+        if (!runData?.id) {
+          console.error('❌ CRÍTICO: ID da corrida não encontrado na resposta!');
+          console.error('Estrutura da resposta:', JSON.stringify(responseStartRun, null, 2));
+          Alert.alert(
+            'Erro',
+            'A corrida foi criada mas não foi possível obter o ID. Por favor, tente novamente.'
+          );
+          return;
+        }
+        
+        await handleSuccessfulRunStart(runData, initialRouteList[0]);
       } else {
-        console.warn("Erro ao iniciar corrida:", responseStartRun);
+        console.warn("⚠️ Erro ao iniciar corrida:", responseStartRun);
+        Alert.alert(
+          'Erro ao Iniciar',
+          responseStartRun.message || 'Não foi possível iniciar a corrida. Tente novamente.'
+        );
       }
     } catch (error) {
-      console.error("Erro inesperado ao iniciar corrida:", error);
+      console.error("❌ Erro inesperado ao iniciar corrida:", error);
+      Alert.alert(
+        'Erro',
+        'Erro inesperado ao iniciar corrida. Verifique sua conexão.'
+      );
     } finally {
       setLoading(false);
     }
@@ -587,12 +631,20 @@ export const RunProvider = ({children}: RunProviderProps) => {
       const currentCalories = caloriesRef.current;
       const currentRoutes = [...routesToSendRef.current].filter(r => r?.latitude && r?.longitude);
 
+      console.log('🛑 Tentando finalizar corrida...');
+      console.log('🔍 Estado atual do runRef:', JSON.stringify(runRef.current, null, 2));
+      console.log('🔍 ID capturado:', currentRunId);
+      console.log('🔍 Estado do run:', JSON.stringify(run, null, 2));
+
       if (!currentRunId) {
-        throw new Error('ID da corrida não encontrado');
+        console.error('❌ ERRO CRÍTICO: ID da corrida não encontrado!');
+        console.error('runRef.current:', runRef.current);
+        console.error('run:', run);
+        throw new Error('ID da corrida não encontrado. A corrida pode não ter sido iniciada corretamente.');
       }
 
-      console.log('Finalizando corrida ID:', currentRunId);
-      console.log('Total de rotas:', currentRoutes.length);
+      console.log('✅ Finalizando corrida ID:', currentRunId);
+      console.log('📊 Total de rotas:', currentRoutes.length);
 
       // 2. OBTER POSIÇÃO FINAL (se possível)
       let finalLocation = null;
@@ -984,8 +1036,13 @@ export const RunProvider = ({children}: RunProviderProps) => {
   };
 
   useEffect(() => {
-    requestLocationForegroundPermissions()
-    verifyBackgroundLocationPermission()
+    const initPermissions = async () => {
+      await requestLocationForegroundPermissions();
+      await verifyBackgroundLocationPermission();
+    };
+    
+    initPermissions();
+    
     const subscription = AppState.addEventListener('change', handleAppStateChange);
   
     return () => {

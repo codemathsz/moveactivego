@@ -13,6 +13,9 @@
     "ios": {
       "bundleIdentifier": "com.app.MoveActiveGo",
       "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY"
+      },
       "infoPlist": {
         "UIBackgroundModes": ["location", "fetch"],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Este aplicativo precisa acessar sua localização mesmo em segundo plano para registrar rotas durante corridas.",
@@ -26,8 +29,14 @@
       "package": "com.MoveActiveGo",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
-      ]
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDGoW4cdlktD9eW-P49WpPedlDIHEt1HEY"
+        }
+      }
     },
     "plugins": [
       "expo-location",
