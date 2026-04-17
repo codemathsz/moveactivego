@@ -523,3 +523,21 @@ export const handleRequestOpenBox = async(token: string, boxId: number) =>{
     }
   }
 }
+
+export const getLeaderboard = async (token: string, limit: number = 10) => {
+  try {
+    const response = await axiosInstanceAuthoraized(token).get(`/leaderboard?limit=${limit}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || 'Erro ao buscar leaderboard');
+  }
+}
+
+export const deleteAllRuns = async (token: string) => {
+  try {
+    const response = await axiosInstanceAuthoraized(token).delete('/admin/data/runs');
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error?.response?.data?.message || 'Erro ao limpar corridas');
+  }
+}

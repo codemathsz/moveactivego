@@ -9,10 +9,11 @@ const NavigationBar = () => {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const items = [
-    { name: 'Dashboard', label: 'Inicio', icon: 'home-outline', iconLib: 'Ionicons' },
-    { name: 'Activities', label: 'Corridas', icon: 'walk-sharp', iconLib: 'Ionicons' },
-    { name: 'Inventory', label: 'Inventário', icon: 'cube-outline', iconLib: 'Ionicons' },
-    { name: 'Profile', label: 'Perfil', icon: 'person', iconLib: 'Octicons' },
+    { name: 'Dashboard',    label: 'Inicio',     icon: 'home-outline',    iconLib: 'Ionicons' },
+    { name: 'Activities',   label: 'Corridas',   icon: 'walk-sharp',      iconLib: 'Ionicons' },
+    { name: 'Leaderboard',  label: 'Ranking',    icon: 'trophy-outline',  iconLib: 'Ionicons' },
+    { name: 'Inventory',    label: 'Inventário', icon: 'cube-outline',    iconLib: 'Ionicons' },
+    { name: 'Profile',      label: 'Perfil',     icon: 'person',          iconLib: 'Octicons' },
   ];
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);

@@ -31,6 +31,7 @@ import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { LoadingLogo } from '@/components/LoadingLogo';
 import RunSummaryScreen from './runSummary';
+import LeaderboardScreen from './leaderboard';
 
 // Previne a splash screen de esconder automaticamente
 SplashScreen.preventAutoHideAsync();
@@ -147,6 +148,13 @@ function LoggedInStackScreen() {
       <LoggedInStack.Screen
         name='DeleteAccount'
         component={DeleteAccountScreen}
+        options={{
+          headerShown: false,
+        } as any}
+      />
+      <LoggedInStack.Screen
+        name='Leaderboard'
+        component={LeaderboardScreen}
         options={{
           headerShown: false,
         } as any}

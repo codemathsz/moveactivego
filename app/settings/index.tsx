@@ -16,15 +16,17 @@ import { colors } from '../../constants/Screen';
 import { useAuth } from '../../contexts/AuthContext';
 import { useProfile } from '../../contexts/ProfileContext';
 import { useToast } from '../../contexts/ToastContext';
-import { userUpdateInfo, updateProfilePicture } from '../../apis/user.api';
+import { userUpdateInfo, updateProfilePicture, deleteAllRuns } from '../../apis/user.api';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/customButton';
 
 const SettingsScreen = () => {
     const navigation = useNavigation<any>();
-    const { jwt, user, updateProfile } = useAuth();
+    const { jwt, user, updateProfile, refreshUserTotals } = useAuth();
     const { userInfo, refreshUserInfo } = useProfile();
     const { showWarning } = useToast();
+
+    const isAdmin = !!(( userInfo?.user as any)?.is_admin || (user as any)?.is_admin);
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -333,6 +335,57 @@ const SettingsScreen = () => {
                             </View>
                             <Ionicons name="chevron-forward" size={20} color="#898996" />
                         </TouchableOpacity>
+
+                        {isAdmin && (
+                            <TouchableOpacity
+                                style={[styles.menuItem, styles.menuItemDanger]}
+                                onPress={() => {
+                                    Alert.alert(
+                                        'Limpar todas as corridas',
+                                        'Esta ação é irreversível e irá apagar TODAS as corridas de TODOS os usuários.',
+                                        [
+                                            { text: 'Cancelar', style: 'cancel' },
+                                            {
+                                                text: 'Sim, limpar tudo',
+                                                style: 'destructive',
+                                                onPress: () => Alert.alert(
+                                                    'Confirmação final',
+                                                    'Tem certeza absoluta? Esta ação não pode ser desfeita.',
+                                                    [
+                                                        { text: 'Cancelar', style: 'cancel' },
+                                                        {
+                                                            text: 'Apagar agora',
+                                                            style: 'destructive',
+                                                            onPress: async () => {
+                                                                if (!jwt) return;
+                                                                try {
+                                                                    setLoading(true);
+                                                                    await deleteAllRuns(jwt);
+                                                                    await Promise.all([refreshUserTotals(), refreshUserInfo()]);
+                                                                    Alert.alert('Concluído', 'Todas as corridas foram apagadas.');
+                                                                } catch (e: any) {
+                                                                    Alert.alert('Erro', e?.message || 'Não foi possível apagar as corridas.');
+                                                                } finally {
+                                                                    setLoading(false);
+                                                                }
+                                                            },
+                                                        },
+                                                    ]
+                                                ),
+                                            },
+                                        ]
+                                    );
+                                }}
+                            >
+                                <View style={styles.menuItemLeft}>
+                                    <View style={[styles.iconCircle, styles.iconCircleDanger]}>
+                                        <Ionicons name="nuclear-outline" size={20} color="#FF4444" />
+                                    </View>
+                                    <Text style={[styles.menuItemText, styles.menuItemTextDanger]}>Limpar corridas (admin)</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color="#FF4444" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </ScrollView>
@@ -449,6 +502,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
+    },
+    menuItemDanger: {
+        borderColor: '#FFDADA',
+        backgroundColor: '#FFF5F5',
+    },
+    iconCircleDanger: {
+        backgroundColor: '#FFDADA',
+    },
+    menuItemTextDanger: {
+        color: '#FF4444',
     },
     iconCircle: {
         width: 40,

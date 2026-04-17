@@ -1,5 +1,5 @@
-import React from "react";
-import { Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import { Alert, Linking, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import IconFeather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -8,9 +8,11 @@ import { useProfile } from "../contexts/ProfileContext";
 import { colors } from "../constants/Screen";
 import SideProfileImage from "./sideProfileImage";
 import { useNavigation } from "@react-navigation/native";
+import { deleteAllRuns } from "../apis/user.api";
 
 const Sidebar = ({ navigation }: any) => {
   const closeDrawer = () => navigation.closeDrawer();
+  const { user } = useAuth();
   return (
     <LinearGradient colors={["#0BB974", "#038D78"]} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.root}>
       <TouchableOpacity style={{ marginBottom: 20 }}
@@ -27,15 +29,10 @@ const Sidebar = ({ navigation }: any) => {
 
       <MenuItem icon='home-outline' title='Home' screen='Dashboard' closeDrawer={closeDrawer} />
       <MenuItem icon='person-outline' title='Perfil' screen='Profile' closeDrawer={closeDrawer} />
-      {/* <MenuItem icon='wallet-outline' title='Carteira' screen='Carteira' closeDrawer={closeDrawer} />
-      <MenuItem icon='cart-outline' title='Marketplace' screen='Marketplace' closeDrawer={closeDrawer} /> */}
-      {/* <MenuItem icon='cart-outline' title='Carrinho' /> */}
-    {/*   <MenuItem icon='notifications-outline' title='Notificações' screen='Notificações' closeDrawer={closeDrawer} />
-      <MenuItem icon='settings-outline' title='Configurações' screen='Configurações' closeDrawer={closeDrawer} /> */}
-      {/* <MenuItem icon='bug-outline' title='Bug Report' />
-      <MenuItem icon='' title='View Run' screen='ViewRun' /> */}
+      <MenuItem icon='trophy-outline' title='Leaderboard' screen='Leaderboard' closeDrawer={closeDrawer} />
 
       <View style={styles.flexFill}></View>
+      {user?.is_admin && <AdminSection closeDrawer={closeDrawer} />}
       <Footer />
     </LinearGradient>
   );
@@ -83,25 +80,88 @@ const MenuItem = ({ icon, title, screen, closeDrawer }: MenuItemProps & { closeD
   );
 };
 
+const AdminSection = ({ closeDrawer }: { closeDrawer: () => void }) => {
+  const { jwt, refreshUserTotals } = useAuth();
+  const { refreshUserInfo } = useProfile();
+  const [loading, setLoading] = useState(false);
+
+  const handleDeleteRuns = () => {
+    Alert.alert(
+      'Limpar todas as corridas',
+      'Tem certeza? Esta ação é irreversível e irá apagar TODAS as corridas de TODOS os usuários.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Sim, limpar tudo',
+          style: 'destructive',
+          onPress: () => confirmDelete(),
+        },
+      ]
+    );
+  };
+
+  const confirmDelete = () => {
+    Alert.alert(
+      'Confirmação final',
+      'Digite "CONFIRMAR" mentalmente e pressione OK para continuar.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'OK, apagar agora',
+          style: 'destructive',
+          onPress: async () => {
+            if (!jwt) return;
+            setLoading(true);
+            closeDrawer();
+            try {
+              await deleteAllRuns(jwt);
+              await Promise.all([refreshUserTotals(), refreshUserInfo()]);
+              Alert.alert('Concluído', 'Todas as corridas foram apagadas.');
+            } catch (e: any) {
+              Alert.alert('Erro', e?.message || 'Não foi possível apagar as corridas.');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <>
+      <View style={styles.adminSeparator} />
+      <TouchableOpacity
+        style={[styles.menuItem, styles.adminItem, loading && { opacity: 0.5 }]}
+        onPress={handleDeleteRuns}
+        disabled={loading}
+        activeOpacity={0.7}
+      >
+        <Ionicons name='trash-outline' size={16} color='#FF6B6B' />
+        <Text style={[styles.menuItemText, styles.adminItemText]}>
+          {loading ? 'Apagando...' : 'Limpar corridas'}
+        </Text>
+      </TouchableOpacity>
+    </>
+  );
+};
+
 const Footer = () => {
   const auth = useAuth();
 
   const handleOpenAppInStore = () => {
-
     const ANDROID_PACKAGE_NAME = 'com.MoveActiveGo';
     const TESTFLIGHT_URL = 'https://testflight.apple.com/join/ABC123XYZ';
-
     const url = Platform.select({
       android: `market://details?id=${ANDROID_PACKAGE_NAME}`,
       ios: TESTFLIGHT_URL,
     });
-
     if (url) {
       Linking.openURL(url).catch((err) => {
         console.error('Erro ao abrir a loja:', err);
       });
     }
-  }
+  };
 
   return (
     <View style={[styles.footerContainer]}>
@@ -166,6 +226,16 @@ const styles = StyleSheet.create({
   },
   flexFill: {
     flex: 1,
+  },
+  adminSeparator: {
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  adminItem: {
+    marginTop: 4,
+  },
+  adminItemText: {
+    color: '#FF6B6B',
   },
 });
 

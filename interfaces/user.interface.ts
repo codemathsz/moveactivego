@@ -23,5 +23,6 @@ export interface UserInterface {
   wallet: string;
   weight:number;
   profilePicture: string;
+  is_admin?: boolean;
 }
 
